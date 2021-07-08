@@ -1,15 +1,11 @@
 import de.umass.lastfm.Authenticator;
 import de.umass.lastfm.Caller;
 import de.umass.lastfm.Session;
-import de.umass.lastfm.Track;
-import de.umass.lastfm.scrobble.ScrobbleResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,11 +13,13 @@ import java.util.logging.Level;
 
 public class CHScrobbler
 {
-    private static String trackTitle = "", trackArtist = "";
-    private static Session session;
+    private static Logger logger;
+    private static final String version = "v1.1";
 
     public static void main(String[] args)
     {
+        logger = LoggerFactory.getLogger(CHScrobbler.class);
+
         try
         {
             //get api and auth info
@@ -41,24 +39,28 @@ public class CHScrobbler
                 Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
             }
             //logs in last.fm with provided info
-            session = Authenticator.getMobileSession(user, pass, lastFmApiKey, lastFmSecret);
+            Session session = Authenticator.getMobileSession(user, pass, lastFmApiKey, lastFmSecret);
 
             //logged in, start scrobbling
             if(session == null)
             {
                 System.out.println("Unable to establish connection with last.fm! Please make sure your username and password are correct!");
-                Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
+                Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 10, TimeUnit.SECONDS);
             }
 
             else
-                Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(CHScrobbler::scrobble, 0, 1, TimeUnit.SECONDS);
+            {
+                System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)\n\n");
+                logger.info("Successfully logged in with last.fm!");
+                ScrobblerManager.init(session);
+            }
         }
 
         catch(IOException e)
         {
             System.out.println("Sorry, couldn't find or read the 'config.properties' file. " +
                 "Make sure that it is in the same directory as Clone Hero and it is not a corrupted file!");
-            Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 6, TimeUnit.SECONDS);
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 7, TimeUnit.SECONDS);
         }
 
         catch(Exception e)
@@ -68,51 +70,8 @@ public class CHScrobbler
         }
     }
 
-    private static void scrobble()
+    public static Logger getLogger()
     {
-        try
-        {
-
-            File file = new File("currentsong.txt");
-            if(!file.exists())
-            {
-                System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" enabled in Settings.");
-            }
-
-            else
-            {
-                List<String> trackInfo = Files.readAllLines(Paths.get("currentsong.txt"));
-                if(trackInfo.size() > 0)
-                {
-                    if(!trackArtist.equalsIgnoreCase(trackInfo.get(1)) && !trackTitle.equalsIgnoreCase(trackInfo.get(0)))
-                    {
-                        int now = (int) (System.currentTimeMillis() / 1000);
-                        trackArtist = trackInfo.get(1);
-                        trackTitle = trackInfo.get(0);
-
-                        ScrobbleResult result = Track.scrobble(trackArtist, trackTitle, now, session);
-
-                        String str = "\r" +
-                            "Now Playing: " + trackInfo.get(1) + " - " + trackInfo.get(0) +
-                            " | " +
-                            (result.isSuccessful() && !result.isIgnored() ? "Scrobbling!" : "Not scrobbling!") + "     ";
-                        System.out.print(str);
-                    }
-                }
-
-                else
-                {
-                    trackArtist = "";
-                    trackTitle = "";
-                    System.out.print("\r" + "Currently not playing anything!     ");
-                }
-            }
-        }
-
-        catch(IOException e)
-        {
-            System.out.println("Sorry, couldn't find or read the 'currentsong.txt' file! Please try opening this app again.");
-            Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
-        }
+        return logger;
     }
 }
