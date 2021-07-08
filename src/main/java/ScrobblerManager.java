@@ -27,7 +27,7 @@ public class ScrobblerManager
     {
         try
         {
-            File file = new File("C:\\Users\\angel\\Desktop\\clonehero-win64\\currentsong.txt");
+            File file = new File("currentsong.txt");
             if(!file.exists())
             {
                 System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" enabled in Settings.");
@@ -35,7 +35,7 @@ public class ScrobblerManager
 
             else
             {
-                List<String> trackInfo = Files.readAllLines(Paths.get("C:\\Users\\angel\\Desktop\\clonehero-win64\\currentsong.txt"));
+                List<String> trackInfo = Files.readAllLines(Paths.get("currentsong.txt"));
                 if(trackInfo.size() > 0)
                 {
                     //removes the song speed modifier from the title
