@@ -4,17 +4,17 @@ import de.umass.lastfm.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class CHScrobbler
 {
     private static Logger logger;
-    private static final String version = "v1.1";
+    private static final String version = "v1.2";
 
     public static void main(String[] args)
     {
@@ -22,30 +22,57 @@ public class CHScrobbler
 
         try
         {
+            File file = new File("config.txt");
+
+            //start setup if config.txt isn't found
+            if(!file.exists())
+            {
+                try
+                {
+                    Setup.init(file);
+                }
+
+                catch(IOException e)
+                {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
+                        "Error!", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
             //get api and auth info
+            FileInputStream propFile = new FileInputStream(file);
+
             Properties prop = new Properties();
-            FileInputStream propFile = new FileInputStream("config.properties");
             prop.load(propFile);
             String lastFmApiKey = prop.getProperty("lastfm_apikey");
             String lastFmSecret = prop.getProperty("lastfm_secret");
             String user = prop.getProperty("lastfm_username");
             String pass = prop.getProperty("lastfm_password");
 
+            //set last.fm api to show only warnings
             Caller.getInstance().getLogger().setLevel(Level.WARNING);
+
+            if(lastFmApiKey.isEmpty() || lastFmSecret.isEmpty())
+            {
+                JOptionPane.showMessageDialog(null,"last.fm API Key or shared secret key cannot be blank! Please fill them in with the config.txt file.",
+                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+            }
 
             if(user.isEmpty() || pass.isEmpty())
             {
-                System.out.println("Username or password cannot be blank! Please put them in config.properties!");
-                Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
+                JOptionPane.showMessageDialog(null,"last.fm username or password cannot be blank! Please fill them in with the config.txt file.",
+                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
             }
+
             //logs in last.fm with provided info
             Session session = Authenticator.getMobileSession(user, pass, lastFmApiKey, lastFmSecret);
 
             //logged in, start scrobbling
             if(session == null)
             {
-                System.out.println("Unable to establish connection with last.fm! Please make sure your username and password are correct!");
-                Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 10, TimeUnit.SECONDS);
+                JOptionPane.showMessageDialog(null,"Unable to establish connection with last.fm! Please make sure your config.txt details are correct!",
+                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
             }
 
             else
@@ -58,14 +85,14 @@ public class CHScrobbler
 
         catch(IOException e)
         {
-            System.out.println("Sorry, couldn't find or read the 'config.properties' file. " +
-                "Make sure that it is in the same directory as Clone Hero and it is not a corrupted file!");
-            Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 7, TimeUnit.SECONDS);
+            JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this if you can!",
+                "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
 
         catch(Exception e)
         {
-            System.out.println("Something went wrong! Please send a screenshot of this error log to Angel.");
+            System.out.println("Something went wrong! Please send a screenshot of this error log.");
             e.printStackTrace();
         }
     }
