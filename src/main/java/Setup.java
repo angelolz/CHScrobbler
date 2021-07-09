@@ -20,12 +20,15 @@ public class Setup
 
         System.out.println("What is your last.fm shared secret?");
         String secret = kbd.nextLine();
+        System.out.println();
 
         System.out.println("What is your last.fm username?");
         String user = kbd.nextLine();
+        System.out.println();
 
         System.out.println("What is your last.fm password?");
         String pass = kbd.nextLine();
+        System.out.println();
 
         kbd.close();
 
@@ -39,6 +42,6 @@ public class Setup
         fw.close();
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
-            "The program will now proceed with logging in.");
+            "The program will now proceed with logging in.\n\n");
     }
 }
