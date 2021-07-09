@@ -17,6 +17,7 @@ public class Setup
             "After signing up, you should get an api key and a shared secret key. **DO NOT SHARE THIS WITH ANYONE**\n\n" +
             "What is your api key?");
         String apiKey = kbd.nextLine();
+        System.out.println();
 
         System.out.println("What is your last.fm shared secret?");
         String secret = kbd.nextLine();
@@ -42,6 +43,6 @@ public class Setup
         fw.close();
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
-            "The program will now proceed with logging in.\n\n");
+            "The program will now proceed with logging in.\n");
     }
 }
