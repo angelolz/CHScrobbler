@@ -77,7 +77,8 @@ public class CHScrobbler
 
             else
             {
-                System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)\n\n");
+                System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)");
+                System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
                 logger.info("Successfully logged in with last.fm!");
                 ScrobblerManager.init(session);
             }
