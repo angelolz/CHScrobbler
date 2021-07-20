@@ -1,6 +1,12 @@
+package main;
+
+import com.google.gson.Gson;
 import de.umass.lastfm.Authenticator;
 import de.umass.lastfm.Caller;
 import de.umass.lastfm.Session;
+import jsonObjects.ReleaseJson;
+import methods.ReadURL;
+import methods.Setup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,14 +20,24 @@ import java.util.logging.Level;
 public class CHScrobbler
 {
     private static Logger logger;
-    private static final String version = "v1.2";
+    private static final String version = "v1.3";
 
     public static void main(String[] args)
     {
+
         logger = LoggerFactory.getLogger(CHScrobbler.class);
 
         try
         {
+            System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)");
+            System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
+
+            boolean latestVersion = checkVersion();
+            if(!latestVersion)
+            {
+                System.out.println("You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible.\n\n");
+            }
+
             File file = new File("config.txt");
 
             //start setup if config.txt isn't found
@@ -77,8 +93,6 @@ public class CHScrobbler
 
             else
             {
-                System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)");
-                System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
                 logger.info("Successfully logged in with last.fm!");
                 ScrobblerManager.init(session);
             }
@@ -101,5 +115,14 @@ public class CHScrobbler
     public static Logger getLogger()
     {
         return logger;
+    }
+
+    private static boolean checkVersion()
+    {
+        String json = ReadURL.readURL("https://api.github.com/repos/angelolz1/CHScrobbler/releases/latest");
+        Gson gson = new Gson();
+        ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
+
+        return version.equalsIgnoreCase(r.getTagName());
     }
 }
