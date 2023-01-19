@@ -29,15 +29,16 @@ public class ScrobblerManager
     {
         try
         {
-            File file = new File("currentsong.txt");
+            File file = new File(CHScrobbler.getDataDirectory() + "/currentsong.txt");
             if(!file.exists())
             {
-                System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" enabled in Settings.");
+                System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" " +
+                    "enabled in Settings and your Clone Hero data folder is set correctly.");
             }
 
             else
             {
-                List<String> trackInfo = Files.readAllLines(Paths.get("currentsong.txt"));
+                List<String> trackInfo = Files.readAllLines(Paths.get(CHScrobbler.getDataDirectory() + "/currentsong.txt"));
                 if(trackInfo.size() > 0)
                 {
                     //removes the song speed modifier from the title

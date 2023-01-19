@@ -20,7 +20,9 @@ import java.util.logging.Level;
 public class CHScrobbler
 {
     private static Logger logger;
-    private static final String version = "v1.3";
+    private static final String VERSION = "v1.4";
+    private static final String LAST_FM_INIT_ERROR = "last.fm init error!";
+    private static String dataFolder;
 
     public static void main(String[] args)
     {
@@ -29,7 +31,7 @@ public class CHScrobbler
 
         try
         {
-            System.out.println("Thanks for using CHScrobbler " + version + " by angelolz1 :)");
+            System.out.println("Thanks for using CHScrobbler " + VERSION + " by angelolz1 :)");
             System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
 
             boolean latestVersion = checkVersion();
@@ -65,6 +67,7 @@ public class CHScrobbler
             String lastFmSecret = prop.getProperty("lastfm_secret");
             String user = prop.getProperty("lastfm_username");
             String pass = prop.getProperty("lastfm_password");
+            dataFolder = prop.getProperty("clonehero_data_folder");
 
             //set last.fm api to show only warnings
             Caller.getInstance().getLogger().setLevel(Level.WARNING);
@@ -72,13 +75,13 @@ public class CHScrobbler
             if(lastFmApiKey.isEmpty() || lastFmSecret.isEmpty())
             {
                 JOptionPane.showMessageDialog(null,"last.fm API Key or shared secret key cannot be blank! Please fill them in with the config.txt file.",
-                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             if(user.isEmpty() || pass.isEmpty())
             {
                 JOptionPane.showMessageDialog(null,"last.fm username or password cannot be blank! Please fill them in with the config.txt file.",
-                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             //logs in last.fm with provided info
@@ -88,7 +91,7 @@ public class CHScrobbler
             if(session == null)
             {
                 JOptionPane.showMessageDialog(null,"Unable to establish connection with last.fm! Please make sure your config.txt details are correct!",
-                    "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             else
@@ -101,7 +104,7 @@ public class CHScrobbler
         catch(IOException e)
         {
             JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this if you can!",
-                "last.fm init error!", JOptionPane.ERROR_MESSAGE);
+                LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
 
@@ -123,6 +126,14 @@ public class CHScrobbler
         Gson gson = new Gson();
         ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
 
-        return version.equalsIgnoreCase(r.getTagName());
+        return VERSION.equalsIgnoreCase(r.getTagName());
+    }
+
+    public static String getDataDirectory() {
+        return dataFolder;
+    }
+
+    public static void setDataDirectory(String newDir) {
+        dataFolder = newDir;
     }
 }
