@@ -44,9 +44,7 @@ public class CHScrobbler
 
             //start setup if config.txt isn't found
             if(!file.exists())
-            {
                 initSetup(file);
-            }
 
             //get api and auth info
             FileInputStream propFile = new FileInputStream(file);

@@ -45,7 +45,7 @@ public class Setup
             System.out.println();
 
             if(!answer.trim().isEmpty())
-                dataFolder = answer;
+                dataFolder = answer.replaceAll("\\\\", "/");
         }
 
         else
