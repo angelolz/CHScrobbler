@@ -45,17 +45,7 @@ public class CHScrobbler
             //start setup if config.txt isn't found
             if(!file.exists())
             {
-                try
-                {
-                    Setup.init(file);
-                }
-
-                catch(IOException e)
-                {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
-                        "Error!", JOptionPane.ERROR_MESSAGE);
-                }
+                initSetup(file);
             }
 
             //get api and auth info
@@ -127,6 +117,20 @@ public class CHScrobbler
         ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
 
         return VERSION.equalsIgnoreCase(r.getTagName());
+    }
+
+    private static void initSetup(File file) {
+        try
+        {
+            Setup.init(file);
+        }
+
+        catch(IOException e)
+        {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
+                "Error!", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static String getDataDirectory() {

@@ -15,8 +15,10 @@ import java.util.concurrent.TimeUnit;
 public class ScrobblerManager
 {
     private static Session session;
-    private static boolean playing = false, attemptedScrobble = false;
-    private static String trackArtist = "", trackTitle = "";
+    private static boolean playing = false;
+    private static boolean attemptedScrobble = false;
+    private static String trackArtist = "";
+    private static String trackTitle = "";
     private static int timestamp;
 
     public static void init(Session s)
@@ -39,7 +41,7 @@ public class ScrobblerManager
             else
             {
                 List<String> trackInfo = Files.readAllLines(Paths.get(CHScrobbler.getDataDirectory() + "/currentsong.txt"));
-                if(trackInfo.size() > 0)
+                if(!trackInfo.isEmpty())
                 {
                     //removes the song speed modifier from the title
                     String correctedTitle = trackInfo.get(0).replaceAll("(\\(\\d+%\\))", "").trim();
@@ -52,7 +54,7 @@ public class ScrobblerManager
 
                         if(!playing)
                         {
-                            CHScrobbler.getLogger().info("Now Playing: " + trackInfo.get(1) + " - " + correctedTitle);
+                            CHScrobbler.getLogger().info("Now Playing: {} - {}", trackInfo.get(1), correctedTitle);
                             playing = true;
                         }
                     }

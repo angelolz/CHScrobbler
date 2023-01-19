@@ -10,8 +10,6 @@ import java.util.Scanner;
 
 public class Setup
 {
-    private Setup() {}
-
     public static void init(File file) throws IOException
     {
         System.out.println("Hello! Thank you for using CHScrobbler. This seems like your first time using the program! " +
