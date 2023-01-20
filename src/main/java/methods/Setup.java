@@ -16,7 +16,7 @@ public class Setup
         Scanner kbd = new Scanner(System.in);
 
         System.out.println("First off, you would need a last.fm api key! You can get one here: https://www.last.fm/api/account/create\n" +
-            "You only need to fill in the email and Application name. You can just put 'CHScrobbler' or whatever." +
+            "You only need to fill in the email and Application name. You can just put 'CHScrobbler' or whatever. " +
             "After signing up, you should get an api key and a shared secret key. **DO NOT SHARE THIS WITH ANYONE**\n\n" +
             "What is your api key?");
         String apiKey = kbd.nextLine();
@@ -50,6 +50,9 @@ public class Setup
         {
             System.out.println("Automatically found your Clone Hero folder:");
             System.out.println(cloneHeroFolder.getPath());
+            System.out.println();
+
+            System.out.println("If this isn't correct, you can change it in your config.");
             System.out.println();
         }
 
