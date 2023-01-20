@@ -66,8 +66,6 @@ public class Setup
                     "lastfm_password=%s\n" +
                     "clonehero_data_folder=%s",
                 apiKey, secret, user, pass, dataFolder));
-
-            CHScrobbler.setDataDirectory(dataFolder);
         }
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +

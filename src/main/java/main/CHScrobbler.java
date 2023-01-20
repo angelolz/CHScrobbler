@@ -7,55 +7,62 @@ import de.umass.lastfm.Session;
 import jsonObjects.ReleaseJson;
 import methods.ReadURL;
 import methods.Setup;
+import methods.Statics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 
 public class CHScrobbler
 {
-    private static Logger logger;
     private static final String VERSION = "v1.4";
-    private static final String LAST_FM_INIT_ERROR = "last.fm init error!";
-    private static String dataFolder;
+    private static Logger logger;
 
     public static void main(String[] args)
     {
-
         logger = LoggerFactory.getLogger(CHScrobbler.class);
+
+        System.out.println("Thanks for using CHScrobbler " + VERSION + " by angelolz1 :)");
+        System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
+        checkVersion();
 
         try
         {
-            System.out.println("Thanks for using CHScrobbler " + VERSION + " by angelolz1 :)");
-            System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
-
-            boolean latestVersion = checkVersion();
-            if(!latestVersion)
-            {
-                System.out.println("You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible.\n\n");
-            }
-
             File file = new File("config.txt");
 
             //start setup if config.txt isn't found
-            if(!file.exists())
-                initSetup(file);
+            if(!file.exists()) initSetup(file);
 
-            //get api and auth info
+            //get properties
             FileInputStream propFile = new FileInputStream(file);
-
             Properties prop = new Properties();
             prop.load(propFile);
+
+            //last.fm api details
             String lastFmApiKey = prop.getProperty("lastfm_apikey");
             String lastFmSecret = prop.getProperty("lastfm_secret");
             String user = prop.getProperty("lastfm_username");
             String pass = prop.getProperty("lastfm_password");
-            dataFolder = prop.getProperty("clonehero_data_folder");
+
+            //clone hero data
+            String dataFolder = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/") + "/Clone Hero";
+            if(prop.getProperty(Statics.DATA_FOLDER_PROP_NAME) == null)
+            {
+                FileOutputStream fr = new FileOutputStream(file);
+                prop.setProperty(Statics.DATA_FOLDER_PROP_NAME, dataFolder);
+                prop.store(fr, Statics.DATA_FOLDER_PROP_NAME);
+                fr.close();
+            }
+
+            else
+                dataFolder = prop.getProperty(Statics.DATA_FOLDER_PROP_NAME);
 
             //set last.fm api to show only warnings
             Caller.getInstance().getLogger().setLevel(Level.WARNING);
@@ -63,42 +70,36 @@ public class CHScrobbler
             if(lastFmApiKey.isEmpty() || lastFmSecret.isEmpty())
             {
                 JOptionPane.showMessageDialog(null,"last.fm API Key or shared secret key cannot be blank! Please fill them in with the config.txt file.",
-                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
+                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             if(user.isEmpty() || pass.isEmpty())
             {
                 JOptionPane.showMessageDialog(null,"last.fm username or password cannot be blank! Please fill them in with the config.txt file.",
-                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
+                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             //logs in last.fm with provided info
             Session session = Authenticator.getMobileSession(user, pass, lastFmApiKey, lastFmSecret);
 
-            //logged in, start scrobbling
             if(session == null)
             {
                 JOptionPane.showMessageDialog(null,"Unable to establish connection with last.fm! Please make sure your config.txt details are correct!",
-                    LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
+                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             }
 
             else
             {
                 logger.info("Successfully logged in with last.fm!");
-                ScrobblerManager.init(session);
+                ScrobblerManager.init(session, dataFolder);
             }
-        }
-
-        catch(IOException e)
-        {
-            JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this if you can!",
-                LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
 
         catch(Exception e)
         {
-            System.out.println("Something went wrong! Please send a screenshot of this error log.");
+            JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this if you can!",
+                Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
+            System.out.println("Something went wrong! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.");
             e.printStackTrace();
         }
     }
@@ -108,13 +109,16 @@ public class CHScrobbler
         return logger;
     }
 
-    private static boolean checkVersion()
+    private static void checkVersion()
     {
         String json = ReadURL.readURL("https://api.github.com/repos/angelolz1/CHScrobbler/releases/latest");
         Gson gson = new Gson();
         ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
 
-        return VERSION.equalsIgnoreCase(r.getTagName());
+        boolean latestVersion = VERSION.equalsIgnoreCase(r.getTagName());
+
+        if(!latestVersion)
+            System.out.println("You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible.\n\n");
     }
 
     private static void initSetup(File file) {
@@ -129,13 +133,5 @@ public class CHScrobbler
             JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
                 "Error!", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    public static String getDataDirectory() {
-        return dataFolder;
-    }
-
-    public static void setDataDirectory(String newDir) {
-        dataFolder = newDir;
     }
 }

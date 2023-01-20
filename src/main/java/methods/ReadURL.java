@@ -12,7 +12,6 @@ public class ReadURL
     {
         try
         {
-
             URL url = new URL(string);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.connect();

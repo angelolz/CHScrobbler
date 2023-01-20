@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ScrobblerManager
 {
+    private static String dataDir;
     private static Session session;
     private static boolean playing = false;
     private static boolean attemptedScrobble = false;
@@ -21,9 +22,10 @@ public class ScrobblerManager
     private static String trackTitle = "";
     private static int timestamp;
 
-    public static void init(Session s)
+    public static void init(Session session, String dataDir)
     {
-        session = s;
+        ScrobblerManager.session = session;
+        ScrobblerManager.dataDir = dataDir;
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(ScrobblerManager::scrobble, 0, 1, TimeUnit.SECONDS);
     }
 
@@ -31,7 +33,7 @@ public class ScrobblerManager
     {
         try
         {
-            File file = new File(CHScrobbler.getDataDirectory() + "/currentsong.txt");
+            File file = new File(dataDir + "/currentsong.txt");
             if(!file.exists())
             {
                 System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" " +
@@ -40,7 +42,7 @@ public class ScrobblerManager
 
             else
             {
-                List<String> trackInfo = Files.readAllLines(Paths.get(CHScrobbler.getDataDirectory() + "/currentsong.txt"));
+                List<String> trackInfo = Files.readAllLines(Paths.get(dataDir + "/currentsong.txt"));
                 if(!trackInfo.isEmpty())
                 {
                     //removes the song speed modifier from the title
@@ -61,24 +63,16 @@ public class ScrobblerManager
 
                     else
                     {
-                        if(!attemptedScrobble)
+                        if(!attemptedScrobble && (System.currentTimeMillis()/1000 - timestamp >= 25))
                         {
-                            if(System.currentTimeMillis()/1000 - timestamp >= 25)
-                            {
-                                ScrobbleResult result = Track.scrobble(trackArtist, correctedTitle, timestamp, session);
+                            ScrobbleResult result = Track.scrobble(trackArtist, correctedTitle, timestamp, session);
 
-                                if(result.isSuccessful() && !result.isIgnored())
-                                {
-                                    CHScrobbler.getLogger().info("Scrobbled the currently playing song!");
-                                }
+                            if(result.isSuccessful() && !result.isIgnored())
+                                CHScrobbler.getLogger().info("Scrobbled the currently playing song!");
+                            else
+                                CHScrobbler.getLogger().warn("Couldn't scrobble the currently playing song!");
 
-                                else
-                                {
-                                    CHScrobbler.getLogger().warn("Couldn't scrobble the currently playing song!");
-                                }
-
-                                attemptedScrobble = true;
-                            }
+                            attemptedScrobble = true;
                         }
                     }
                 }
