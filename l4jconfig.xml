@@ -4,11 +4,11 @@
   <headerType>console</headerType>
   <jar>F:\Desktop\CodeProjects\java\personal\CHScrobbler\target\CHScrobbler-1.4.jar</jar>
   <outfile>F:\Desktop\CHScrobbler-1.4.exe</outfile>
-  <errTitle>Cookie Clicker Rich Presence Mod</errTitle>
+  <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
-  <downloadUrl>http://java.com/download</downloadUrl>
+  <downloadUrl></downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
@@ -19,19 +19,10 @@
     <windowTitle>CHScrobbler</windowTitle>
   </singleInstance>
   <jre>
-    <path></path>
-    <bundledJre64Bit>false</bundledJre64Bit>
-    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <path>%JAVA_HOME%;%PATH%</path>
+    <requiresJdk>false</requiresJdk>
+    <requires64Bit>false</requires64Bit>
     <minVersion>1.8</minVersion>
     <maxVersion>16</maxVersion>
-    <jdkPreference>preferJre</jdkPreference>
-    <runtimeBits>64/32</runtimeBits>
   </jre>
-  <messages>
-    <startupErr>An error occurred while starting the application.</startupErr>
-    <bundledJreErr>This application requires a Java Runtime Environment.</bundledJreErr>
-    <jreVersionErr>This application requires a Java Runtime Environment.</jreVersionErr>
-    <launcherErr>The registry refers to a nonexistent Java Runtime Environment installation or the runtime is corrupted.</launcherErr>
-    <instanceAlreadyExistsMsg>An application instance is already running.</instanceAlreadyExistsMsg>
-  </messages>
 </launch4jConfig>
