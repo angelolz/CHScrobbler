@@ -18,6 +18,7 @@ public class ScrobblerManager
     private static Session session;
     private static boolean playing = false;
     private static boolean attemptedScrobble = false;
+    private static boolean warnedNotFound = false;
     private static String trackArtist = "";
     private static String trackTitle = "";
     private static int timestamp;
@@ -36,8 +37,12 @@ public class ScrobblerManager
             File file = new File(dataDir + "/currentsong.txt");
             if(!file.exists())
             {
-                System.out.print("\rUnable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" " +
-                    "enabled in Settings and your Clone Hero data folder is set correctly.");
+                if(!warnedNotFound)
+                {
+                    System.out.println("Unable to find 'currentsong.txt'! Please make sure you have \"Export Current Song\" " +
+                        "enabled in Settings and your Clone Hero data folder is set correctly.");
+                    warnedNotFound = true;
+                }
             }
 
             else
@@ -87,7 +92,7 @@ public class ScrobblerManager
                         trackTitle = "";
                         timestamp = 0;
 
-                        System.out.print("Currently not playing anything!\r");
+                        CHScrobbler.getLogger().info("Currently not playing anything!\r");
                     }
                 }
             }
@@ -95,7 +100,7 @@ public class ScrobblerManager
 
         catch(IOException e)
         {
-            System.out.println("Sorry, couldn't find or read the 'currentsong.txt' file! Please try opening this app again.");
+            CHScrobbler.getLogger().error("Sorry, couldn't find or read the 'currentsong.txt' file! Please try opening this app again.");
             Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
         }
     }
