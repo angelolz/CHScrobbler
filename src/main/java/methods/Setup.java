@@ -1,7 +1,5 @@
 package methods;
 
-import main.CHScrobbler;
-
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileWriter;
