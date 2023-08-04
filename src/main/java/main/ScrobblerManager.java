@@ -180,8 +180,12 @@ public class ScrobblerManager
                     || !scrobbleData.getAlbum().equalsIgnoreCase(album))
             {
                 scrobbleData = new ScrobbleData(artist, track, (int) (System.currentTimeMillis() / 1000));
-                scrobbleData.setAlbum(album);
-                scrobbleData.setAlbumArtist(album);
+
+                if(!album.isEmpty())
+                {
+                    scrobbleData.setAlbum(album);
+                    scrobbleData.setAlbumArtist(artist);
+                }
 
                 Track.updateNowPlaying(scrobbleData, session);
 
