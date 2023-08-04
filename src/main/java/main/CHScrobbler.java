@@ -64,6 +64,29 @@ public class CHScrobbler
             else
                 dataFolder = prop.getProperty(Statics.DATA_FOLDER_PROP_NAME);
 
+            //validate scrobble threshold seconds
+            int scrobbleThresholdSeconds = 25;
+            String scrobbleThresholdSecondsString = prop.getProperty("scrobble_threshold_seconds");
+
+            if (scrobbleThresholdSecondsString != null && !scrobbleThresholdSecondsString.isEmpty())
+            {
+                try
+                {
+                    scrobbleThresholdSeconds = Integer.parseInt(scrobbleThresholdSecondsString);
+                }
+                catch(NumberFormatException e)
+                {
+                    scrobbleThresholdSeconds = -1;
+                }
+
+                if (scrobbleThresholdSeconds < 1 || scrobbleThresholdSeconds > 240)
+                {
+                    scrobbleThresholdSeconds = 25;
+                    JOptionPane.showMessageDialog(null,"scrobble_threshold_seconds must be a valid number between 1 and 240 seconds (4 minutes).",
+                            Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
             //set last.fm api to show only warnings
             Caller.getInstance().getLogger().setLevel(Level.WARNING);
 
@@ -91,7 +114,7 @@ public class CHScrobbler
             else
             {
                 logger.info("Successfully logged in with last.fm!");
-                ScrobblerManager.init(session, dataFolder);
+                ScrobblerManager.init(session, dataFolder, scrobbleThresholdSeconds);
             }
         }
 
@@ -121,7 +144,8 @@ public class CHScrobbler
             System.out.println("You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible.\n\n");
     }
 
-    private static void initSetup(File file) {
+    private static void initSetup(File file)
+    {
         try
         {
             Setup.init(file);
@@ -129,9 +153,9 @@ public class CHScrobbler
 
         catch(IOException e)
         {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
                 "Error!", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 }
