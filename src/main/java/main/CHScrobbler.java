@@ -65,7 +65,7 @@ public class CHScrobbler
                 dataFolder = prop.getProperty(Statics.DATA_FOLDER_PROP_NAME);
 
             //validate scrobble threshold seconds
-            int scrobbleThresholdSeconds = 25;
+            int scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
             String scrobbleThresholdSecondsString = prop.getProperty("scrobble_threshold_seconds");
 
             if (scrobbleThresholdSecondsString != null && !scrobbleThresholdSecondsString.isEmpty())
@@ -79,10 +79,10 @@ public class CHScrobbler
                     scrobbleThresholdSeconds = -1;
                 }
 
-                if (scrobbleThresholdSeconds < 1 || scrobbleThresholdSeconds > 240)
+                if (scrobbleThresholdSeconds < Statics.DEFAULT_SCROBBLE_THRESHOLD || scrobbleThresholdSeconds > 240)
                 {
-                    scrobbleThresholdSeconds = 25;
-                    JOptionPane.showMessageDialog(null,"scrobble_threshold_seconds must be a valid number between 1 and 240 seconds (4 minutes).",
+                    scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
+                    JOptionPane.showMessageDialog(null,"scrobble_threshold_seconds must be a valid number between " + Statics.DEFAULT_SCROBBLE_THRESHOLD + " and 240 seconds (4 minutes).",
                             Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
                 }
             }

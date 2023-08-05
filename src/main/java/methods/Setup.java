@@ -66,8 +66,8 @@ public class Setup
                     "lastfm_username=%s\n" +
                     "lastfm_password=%s\n" +
                     "clonehero_data_folder=%s\n" +
-                    "scrobble_threshold_seconds=%s25",
-                    apiKey, secret, user, pass, dataFolder));
+                    "scrobble_threshold_seconds=%s",
+                    apiKey, secret, user, pass, dataFolder, Statics.DEFAULT_SCROBBLE_THRESHOLD));
         }
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
