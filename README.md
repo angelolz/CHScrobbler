@@ -15,6 +15,7 @@ lastfm_apikey=
 lastfm_secret=
 lastfm_username=
 lastfm_password=
+scrobble_threshold_seconds=30
 ```
 
 You can get your last.fm api details [here](https://www.last.fm/api/account/create).
