@@ -32,6 +32,7 @@ public class ReadURL
         catch(IOException e)
         {
             System.out.println("Unable to check for new updates!");
+            e.printStackTrace();
         }
 
         //if it fails

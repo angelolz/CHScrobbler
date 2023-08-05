@@ -61,12 +61,13 @@ public class Setup
         try(FileWriter fw = new FileWriter(file))
         {
             fw.write(String.format(
-                "lastfm_apikey=%s\n" +
+                    "lastfm_apikey=%s\n" +
                     "lastfm_secret=%s\n" +
                     "lastfm_username=%s\n" +
                     "lastfm_password=%s\n" +
-                    "clonehero_data_folder=%s",
-                apiKey, secret, user, pass, dataFolder));
+                    "clonehero_data_folder=%s\n" +
+                    "scrobble_threshold_seconds=%s",
+                    apiKey, secret, user, pass, dataFolder, Statics.DEFAULT_SCROBBLE_THRESHOLD));
         }
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
