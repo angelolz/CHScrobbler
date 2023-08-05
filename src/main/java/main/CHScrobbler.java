@@ -22,7 +22,7 @@ import java.util.logging.Level;
 
 public class CHScrobbler
 {
-    private static final String VERSION = "v1.4";
+    private static final String VERSION = "v1.5";
     private static Logger logger;
 
     public static void main(String[] args)
@@ -30,7 +30,7 @@ public class CHScrobbler
         logger = LoggerFactory.getLogger(CHScrobbler.class);
 
         System.out.println("Thanks for using CHScrobbler " + VERSION + " by angelolz1 :)");
-        System.out.println("https://github.com/angelolz1/CHScrobbler\n\n");
+        System.out.println("https://github.com/angelolz/CHScrobbler\n\n");
         checkVersion();
 
         try
@@ -65,27 +65,7 @@ public class CHScrobbler
                 dataFolder = prop.getProperty(Statics.DATA_FOLDER_PROP_NAME);
 
             //validate scrobble threshold seconds
-            int scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
-            String scrobbleThresholdSecondsString = prop.getProperty("scrobble_threshold_seconds");
-
-            if (scrobbleThresholdSecondsString != null && !scrobbleThresholdSecondsString.isEmpty())
-            {
-                try
-                {
-                    scrobbleThresholdSeconds = Integer.parseInt(scrobbleThresholdSecondsString);
-                }
-                catch(NumberFormatException e)
-                {
-                    scrobbleThresholdSeconds = -1;
-                }
-
-                if (scrobbleThresholdSeconds < Statics.DEFAULT_SCROBBLE_THRESHOLD || scrobbleThresholdSeconds > 240)
-                {
-                    scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
-                    JOptionPane.showMessageDialog(null,"scrobble_threshold_seconds must be a valid number between " + Statics.DEFAULT_SCROBBLE_THRESHOLD + " and 240 seconds (4 minutes).",
-                            Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
-                }
-            }
+            int scrobbleThresholdSeconds = validateThreshold(prop.getProperty("scrobble_threshold_seconds"));
 
             //set last.fm api to show only warnings
             Caller.getInstance().getLogger().setLevel(Level.WARNING);
@@ -120,7 +100,7 @@ public class CHScrobbler
 
         catch(Exception e)
         {
-            JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this if you can!",
+            JOptionPane.showMessageDialog(null,"Sorry, there was a problem reading the config file! Please report this error to @angelolz1 on GitHub/Twitter!",
                 Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
             System.out.println("Something went wrong! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.");
             e.printStackTrace();
@@ -134,7 +114,7 @@ public class CHScrobbler
 
     private static void checkVersion()
     {
-        String json = ReadURL.readURL("https://api.github.com/repos/angelolz1/CHScrobbler/releases/latest");
+        String json = ReadURL.readURL("https://api.github.com/repos/angelolz/CHScrobbler/releases/latest");
         Gson gson = new Gson();
         ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
 
@@ -153,9 +133,36 @@ public class CHScrobbler
 
         catch(IOException e)
         {
-            JOptionPane.showMessageDialog(null,"There was an error making the config file. Please let the dev know.",
+            JOptionPane.showMessageDialog(null,"There was an error making the config file. Please report this to @angelolz1 on Github or Twitter.",
                 "Error!", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private static int validateThreshold(String thresholdSecondsString)
+    {
+        int scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
+
+        if (thresholdSecondsString != null && !thresholdSecondsString.isEmpty())
+        {
+            try
+            {
+                scrobbleThresholdSeconds = Integer.parseInt(thresholdSecondsString);
+            }
+            catch(NumberFormatException e)
+            {
+                logger.warn("Invalid scrobble_threshold_seconds given. Please fix this setting in your config.txt file.");
+                logger.info("scrobble_threshold_seconds set to default of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
+            }
+
+            if (scrobbleThresholdSeconds < Statics.DEFAULT_SCROBBLE_THRESHOLD || scrobbleThresholdSeconds > 240)
+            {
+                scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
+                logger.warn("scrobble_threshold_seconds must be a valid number between {} and 240 seconds (4 minutes).", Statics.DEFAULT_SCROBBLE_THRESHOLD);
+                logger.info("scrobble_threshold_seconds set to default of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
+            }
+        }
+
+        return scrobbleThresholdSeconds;
     }
 }
