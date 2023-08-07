@@ -34,7 +34,7 @@ public class Setup
         String pass = kbd.nextLine();
         System.out.println();
 
-        String dataFolder = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/") + "/Clone Hero";
+        String dataFolder = getDefaultDataFolder();
         File cloneHeroFolder = new File(dataFolder);
         if(!cloneHeroFolder.exists())
         {
@@ -61,16 +61,26 @@ public class Setup
         try(FileWriter fw = new FileWriter(file))
         {
             fw.write(String.format(
-                    "lastfm_apikey=%s\n" +
+                "lastfm_apikey=%s\n" +
                     "lastfm_secret=%s\n" +
                     "lastfm_username=%s\n" +
                     "lastfm_password=%s\n" +
                     "clonehero_data_folder=%s\n" +
                     "scrobble_threshold_seconds=%s",
-                    apiKey, secret, user, pass, dataFolder, Statics.DEFAULT_SCROBBLE_THRESHOLD));
+                apiKey, secret, user, pass, dataFolder, Statics.DEFAULT_SCROBBLE_THRESHOLD));
         }
 
         System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
             "The program will now proceed with logging in.\n");
+    }
+
+    private static String getDefaultDataFolder()
+    {
+        String os = System.getProperty("os.name");
+        String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
+        if(os.toLowerCase().contains("linux"))
+            return defaultUserDirectory + "/.clonehero";
+        else
+            return defaultUserDirectory + "/Clone Hero";
     }
 }
