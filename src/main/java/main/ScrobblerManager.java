@@ -118,7 +118,7 @@ public class ScrobblerManager
             if(scrobbleData == null
                 || !songData.getArtist().equalsIgnoreCase(scrobbleData.getArtist())
                 || !songData.getTrack().equalsIgnoreCase(scrobbleData.getTrack())
-                || !songData.getAlbum().equalsIgnoreCase(scrobbleData.getAlbum()))
+                || (customSongPatternContainsAlbum && !songData.getAlbum().equalsIgnoreCase(scrobbleData.getAlbum())))
             {
                 scrobbleData = new ScrobbleData(songData.getArtist(), songData.getTrack(), (int) (System.currentTimeMillis() / 1000));
 
