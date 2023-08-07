@@ -5,9 +5,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.regex.Pattern;
 
-public class ReadURL
+public class Utils
 {
+    private static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
+    public static String escapeRegex(String input)
+    {
+        return SPECIAL_REGEX_CHARS.matcher(input).replaceAll("\\\\$0");
+    }
+
     public static String readURL(String string)
     {
         try
@@ -37,5 +45,11 @@ public class ReadURL
 
         //if it fails
         return null;
+    }
+
+    public static boolean isNullOrEmpty(String str) {
+        if(str == null)
+            return true;
+        else return str.isEmpty();
     }
 }

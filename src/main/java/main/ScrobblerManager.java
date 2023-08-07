@@ -4,7 +4,8 @@ import de.umass.lastfm.Session;
 import de.umass.lastfm.Track;
 import de.umass.lastfm.scrobble.ScrobbleData;
 import de.umass.lastfm.scrobble.ScrobbleResult;
-import methods.EscapeRegex;
+import methods.Utils;
+import objects.Song;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +48,7 @@ public class ScrobblerManager
         boolean containsTrackAndArtist = customSongExportSetting.map(x -> x.contains("%s") && x.contains("%a")).orElse(true);
         boolean containsAlbum = customSongExportSetting.map(x -> x.contains("%b")).orElse(false);
 
-        if (customSongExportSetting.isPresent())
+        if(customSongExportSetting.isPresent())
             CHScrobbler.getLogger().info("The Clone Hero setting \"custom_song_export\" is currently set to \"{}\".", customSongExportSetting.get());
         else
             CHScrobbler.getLogger().info("The Clone Hero setting \"custom_song_export\" is currently not set.");
@@ -56,7 +57,7 @@ public class ScrobblerManager
             CHScrobbler.getLogger().error("\"custom_song_export\" must contain \"%s\" and \"%a\". This enables CHScrobbler to function correctly.");
 
         if(!containsAlbum)
-            CHScrobbler.getLogger().warn("\"custom_song_export\" should contain \"%b\". This enables CHScrobbler to include the album name when scrobbling.");
+            CHScrobbler.getLogger().warn("\"custom_song_export\" must contain \"%b\". This enables CHScrobbler to include the album name when scrobbling.");
         else
             CHScrobbler.getLogger().info("\"custom_song_export\" contains \"%b\". This enables CHScrobbler to include the album name when scrobbling.");
 
@@ -66,10 +67,9 @@ public class ScrobblerManager
 
         String value = customSongExportSetting.get();
 
-
-        String regex = EscapeRegex.escapeRegex(value)
-                .replace("%n", "\\R")
-                .replaceAll("%(\\w)", "(?<$1>.*)");
+        String regex = Utils.escapeRegex(value)
+                            .replace("%n", "\\R")
+                            .replaceAll("%(\\w)", "(?<$1>.*)");
 
         ScrobblerManager.customSongPattern = Pattern.compile(regex);
         ScrobblerManager.customSongPatternContainsAlbum = containsAlbum;
@@ -87,10 +87,10 @@ public class ScrobblerManager
             String settingPrefix = "custom_song_export =";
 
             return lines
-                    .map(String::trim)
-                    .filter(x -> x.startsWith(settingPrefix))
-                    .findFirst()
-                    .map(x -> x.substring(settingPrefix.length()).trim());
+                .map(String::trim)
+                .filter(x -> x.startsWith(settingPrefix))
+                .findFirst()
+                .map(x -> x.substring(settingPrefix.length()).trim());
         }
         catch(IOException e)
         {
@@ -104,92 +104,33 @@ public class ScrobblerManager
     {
         try
         {
-            Path currentSongFilePath = Paths.get(dataDir, "currentsong.txt");
-
-            if(!Files.exists(currentSongFilePath))
-            {
-                if(!warnedNotFound)
-                {
-                    warnedNotFound = true;
-                    CHScrobbler.getLogger().warn("Unable to find \"currentsong.txt\"! Please make sure you have \"Export Current Song\" " +
-                            "enabled in Settings and your Clone Hero data folder is set correctly.");
-                }
-
-                return;
-            }
-
-            byte[] currentSongBytes;
-
-            try
-            {
-                currentSongBytes = Files.readAllBytes(currentSongFilePath);
-            }
-
-            catch(IOException e)
-            {
-                CHScrobbler.getLogger().error("Sorry, couldn't find or read the \"currentsong.txt\" file! Please try opening this app again.", e);
-                Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
-
-                return;
-            }
-
-            if(currentSongBytes.length == 0)
+            String currentSong = getCurrentSong();
+            if(Utils.isNullOrEmpty(currentSong))
             {
                 clearScrobbleData();
                 return;
             }
 
-            String currentSong = new String(currentSongBytes, StandardCharsets.UTF_8);
-            if(currentSong.isEmpty())
-            {
-                clearScrobbleData();
+            Song songData = getSongData(currentSong);
+            if(songData == null)
                 return;
-            }
-
-            String artist, track, album;
-
-            if(customSongPattern != null)
-            {
-                Matcher matcher = customSongPattern.matcher(currentSong);
-                if(!matcher.find())
-                {
-                    clearScrobbleData();
-                    return;
-                }
-
-                artist = matcher.group("a").trim();
-                track = matcher.group("s").trim();
-                album = customSongPatternContainsAlbum ? matcher.group("b").trim() : "";
-            }
-
-            else
-            {
-                String[] lines = currentSong.split("\\R");
-
-                artist = lines[1];
-                track = lines[0];
-                album = "";
-            }
-
-            //removes the song speed modifier from the title
-            track = track.replaceAll("(\\(\\d+%\\))", "").trim();
 
             if(scrobbleData == null
-                    || !scrobbleData.getArtist().equalsIgnoreCase(artist)
-                    || !scrobbleData.getTrack().equalsIgnoreCase(track)
-                    || !scrobbleData.getAlbum().equalsIgnoreCase(album))
+                || !songData.getArtist().equalsIgnoreCase(scrobbleData.getArtist())
+                || !songData.getTrack().equalsIgnoreCase(scrobbleData.getTrack())
+                || !songData.getAlbum().equalsIgnoreCase(scrobbleData.getAlbum()))
             {
-                scrobbleData = new ScrobbleData(artist, track, (int) (System.currentTimeMillis() / 1000));
+                scrobbleData = new ScrobbleData(songData.getArtist(), songData.getTrack(), (int) (System.currentTimeMillis() / 1000));
 
-                if(!album.isEmpty())
+                if(!songData.getAlbum().isEmpty())
                 {
-                    scrobbleData.setAlbum(album);
-                    scrobbleData.setAlbumArtist(artist);
+                    scrobbleData.setAlbum(songData.getAlbum());
+                    scrobbleData.setAlbumArtist(songData.getArtist());
                 }
 
                 Track.updateNowPlaying(scrobbleData, session);
 
-                CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}", track, artist, album.isEmpty() ? "" : ", from the album \"" + album + "\".");
+                CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}", songData.getTrack(), songData.getArtist(), songData.getAlbum().isEmpty() ? "" : ", from the album \"" + songData.getAlbum() + "\".");
 
                 attemptedScrobble = false;
             }
@@ -208,12 +149,74 @@ public class ScrobblerManager
 
         catch(Exception e)
         {
-            if (!loggedException)
+            if(!loggedException)
             {
                 loggedException = true;
                 CHScrobbler.getLogger().error("Something went wrong! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.", e);
             }
         }
+    }
+
+    private static String getCurrentSong()
+    {
+        Path currentSongFilePath = Paths.get(dataDir, "currentsong.txt");
+
+        try
+        {
+            if(!Files.exists(currentSongFilePath))
+            {
+                if(!warnedNotFound)
+                {
+                    warnedNotFound = true;
+                    CHScrobbler.getLogger().warn("Unable to find \"currentsong.txt\"! Please make sure you have \"Export Current Song\" " +
+                        "enabled in Settings and your Clone Hero data folder is set correctly.");
+                }
+
+                return null;
+            }
+
+            return new String(Files.readAllBytes(currentSongFilePath), StandardCharsets.UTF_8);
+        }
+
+        catch(IOException e)
+        {
+            CHScrobbler.getLogger().error("Sorry, couldn't find or read the \"currentsong.txt\" file! Please try opening this app again.", e);
+            return null;
+        }
+    }
+
+    private static Song getSongData(String currentSong)
+    {
+        String artist;
+        String track;
+        String album;
+
+        if(customSongPattern != null)
+        {
+            Matcher matcher = customSongPattern.matcher(currentSong);
+            if(!matcher.find())
+            {
+                clearScrobbleData();
+                return null;
+            }
+
+            artist = matcher.group("a").trim();
+            track = matcher.group("s").trim();
+            album = customSongPatternContainsAlbum ? matcher.group("b").trim() : "";
+        }
+
+        else
+        {
+            String[] lines = currentSong.split("\\R");
+
+            artist = lines[1];
+            track = lines[0];
+            album = "";
+        }
+
+        //removes the song speed modifier from the title
+        track = track.replaceAll("(\\(\\d+%\\))", "").trim();
+        return new Song(artist, track, album);
     }
 
     private static void clearScrobbleData()
