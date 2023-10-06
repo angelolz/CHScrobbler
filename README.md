@@ -5,7 +5,7 @@ This app was created by a request of a friend who is a big user of last.fm. I de
 
 ## Installation/Usage
 0. Before starting the app, please make sure that **"Export Current Song"** is enabled in your Clone Hero Settings.
-1. Go to your Clone Hero data folder settings and edit `settings.ini`. Near the bottom, you should find a `custom_song_export` property. Add `%n%b` to it. It should look like `custom_song_export = %s%n%a%n%c%b`. You may need to restart Clone Hero after changing these settings.
+1. Go to your Clone Hero data folder settings and edit `settings.ini`. Near the bottom, you should find a `custom_song_export` property. Add `%n%b` to it. It should look like `custom_song_export = %s%n%a%n%c%n%b`. You may need to restart Clone Hero after changing these settings.
    - For Windows, the data folder is in `%USERPROFILE%\AppData\LocalLow\srylain Inc_\Clone Hero`.
    - For Mac, the data folder is in `~/Clone Hero`.
    - For Linux, the data folder is in `~/.clonehero`.
