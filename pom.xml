@@ -6,7 +6,7 @@
 
     <groupId>com.angelolz1</groupId>
     <artifactId>CHScrobbler</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
 
     <dependencies>
         <dependency>

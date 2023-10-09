@@ -2,12 +2,15 @@ package objects;
 
 public class Config
 {
-    String lastFmApiKey;
-    String lastFmSecret;
-    String username;
-    String password;
-    String dataFolder;
-    Integer scrobbleThreshold;
+    private String lastFmApiKey;
+    private String lastFmSecret;
+    private String username;
+    private String password;
+    private String cloneHeroDataFolder;
+    private String scorespyDataFolder;
+    private Integer scrobbleThreshold;
+
+    boolean scoreSpyMode;
 
     public String getLastFmApiKey()
     {
@@ -53,14 +56,25 @@ public class Config
         return this;
     }
 
-    public String getDataFolder()
+    public String getCloneHeroDataFolder()
     {
-        return dataFolder;
+        return cloneHeroDataFolder;
     }
 
-    public Config setDataFolder(String dataFolder)
+    public Config setCloneHeroDataFolder(String cloneHeroDataFolder)
     {
-        this.dataFolder = dataFolder;
+        this.cloneHeroDataFolder = cloneHeroDataFolder;
+        return this;
+    }
+
+    public String getScorespyDataFolder()
+    {
+        return scorespyDataFolder;
+    }
+
+    public Config setScorespyDataFolder(String scorespyDataFolder)
+    {
+        this.scorespyDataFolder = scorespyDataFolder;
         return this;
     }
 
@@ -73,5 +87,30 @@ public class Config
     {
         this.scrobbleThreshold = scrobbleThreshold;
         return this;
+    }
+
+    public boolean isScoreSpyMode()
+    {
+        return scoreSpyMode;
+    }
+
+    public Config setScoreSpyMode(boolean scoreSpyMode)
+    {
+        this.scoreSpyMode = scoreSpyMode;
+        return this;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("lastfm_username=%s\n" +
+                "lastfm_password=%s\n" +
+                "lastfm_apikey=%s\n" +
+                "lastfm_secret=%s\n" +
+                "clonehero_data_folder=%s\n" +
+                "scorespy_data_folder=%s\n" +
+                "scrobble_threshold_seconds=%s\n" +
+                "scorespy_mode=%s",
+            username, password, lastFmApiKey, lastFmSecret, cloneHeroDataFolder, scorespyDataFolder, scrobbleThreshold, scoreSpyMode);
     }
 }

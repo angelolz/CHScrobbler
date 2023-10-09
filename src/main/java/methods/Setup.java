@@ -1,6 +1,8 @@
 package methods;
 
-import javax.swing.filechooser.FileSystemView;
+import main.CHScrobbler;
+import objects.Config;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -8,79 +10,104 @@ import java.util.Scanner;
 
 public class Setup
 {
-    public static void init(File file) throws IOException
+    public static void init(File configFile) throws IOException
     {
-        System.out.println("Hello! Thank you for using CHScrobbler. This seems like your first time using the program! " +
-            "I'll get you started.\n");
+        Scanner scanner = new Scanner(System.in);
 
-        Scanner kbd = new Scanner(System.in);
+        System.out.println("Hello! Thank you for using CHScrobbler. This seems like your first time using the program! I'll get you started.\n");
 
-        System.out.println("First off, you would need a last.fm api key! You can get one here: https://www.last.fm/api/account/create\n" +
-            "You only need to fill in the email and Application name. You can just put 'CHScrobbler' or whatever. " +
-            "After signing up, you should get an api key and a shared secret key. **DO NOT SHARE THIS WITH ANYONE**\n\n" +
-            "What is your api key?");
-        String apiKey = kbd.nextLine();
+        String apiKey = getUserInput("What is your last.fm api key?", scanner);
+        String secret = getUserInput("What is your last.fm shared secret?", scanner);
+        String user = getUserInput("What is your last.fm username?", scanner);
+        String pass = getUserInput("What is your last.fm password?", scanner);
+
         System.out.println();
 
-        System.out.println("What is your last.fm shared secret?");
-        String secret = kbd.nextLine();
-        System.out.println();
-
-        System.out.println("What is your last.fm username?");
-        String user = kbd.nextLine();
-        System.out.println();
-
-        System.out.println("What is your last.fm password?");
-        String pass = kbd.nextLine();
-        System.out.println();
-
-        String dataFolder = getDefaultDataFolder();
-        File cloneHeroFolder = new File(dataFolder);
-        if(!cloneHeroFolder.exists())
+        String cloneHeroDataFolder = getDefaultOrCustomFolder("Clone Hero", Utils.getDefaultCloneHeroDataFolder(), scanner);
+        String scoreSpyDataFolder = "";
+        boolean scoreSpyMode = false;
+        if(!Utils.isMac())
         {
-            System.out.println("Couldn't find your Clone hero data folder. Put the directory link below or hit Enter if you're expecting it to be in your documents folder.");
-            String answer = kbd.nextLine();
-            System.out.println();
-
-            if(!answer.trim().isEmpty())
-                dataFolder = answer.replaceAll("\\\\", "/");
+            scoreSpyDataFolder = getDefaultOrCustomFolder("ScoreSpy", Utils.getDefaultScoreSpyDataFolder(), scanner);
+            scoreSpyMode = getYesOrNoInput("Do you want to use ScoreSpy mode? [y/n]", scanner);
+            System.out.printf("ScoreSpy mode will be %s. This can be changed in your %s file.\n\n",
+                scoreSpyMode ? "ENABLED" : "DISABLED", Statics.CONFIG_FILE);
         }
 
         else
-        {
-            System.out.println("Automatically found your Clone Hero folder:");
-            System.out.println(cloneHeroFolder.getPath());
-            System.out.println();
+            System.out.println("CHScrobbler detected that you are on a Mac, so ScoreSpy questions will be skipped.\n");
 
-            System.out.println("If this isn't correct, you can change it in your config.");
-            System.out.println();
-        }
+        scanner.close();
 
-        kbd.close();
+        CHScrobbler.getConfig()
+                   .setLastFmApiKey(apiKey)
+                   .setLastFmSecret(secret)
+                   .setUsername(user)
+                   .setPassword(pass)
+                   .setCloneHeroDataFolder(cloneHeroDataFolder)
+                   .setScorespyDataFolder(scoreSpyDataFolder)
+                   .setScrobbleThreshold(Statics.DEFAULT_SCROBBLE_THRESHOLD)
+                   .setScoreSpyMode(scoreSpyMode);
 
-        try(FileWriter fw = new FileWriter(file))
-        {
-            fw.write(String.format(
-                "lastfm_apikey=%s\n" +
-                    "lastfm_secret=%s\n" +
-                    "lastfm_username=%s\n" +
-                    "lastfm_password=%s\n" +
-                    "clonehero_data_folder=%s\n" +
-                    "scrobble_threshold_seconds=%s",
-                apiKey, secret, user, pass, dataFolder, Statics.DEFAULT_SCROBBLE_THRESHOLD));
-        }
+        saveConfigToFile(configFile, CHScrobbler.getConfig());
 
-        System.out.println("Excellent! All your details are saved in the 'config.txt' file, so you can change that if you've made a mistake.\n" +
-            "The program will now proceed with logging in.\n");
+        System.out.printf("Excellent! All your details are saved in the \"%s\" file, so you can change that if you've made a mistake.\n" +
+            "The program will now proceed with logging in.\n\n", Statics.CONFIG_FILE);
     }
 
-    private static String getDefaultDataFolder()
+    private static String getUserInput(String prompt, Scanner scanner)
     {
-        String os = System.getProperty("os.name");
-        String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
-        if(os.toLowerCase().contains("linux"))
-            return defaultUserDirectory + "/.clonehero";
+        while(true)
+        {
+            System.out.print(prompt + " ");
+            String answer = scanner.nextLine();
+
+            if(answer.isEmpty())
+                System.out.println("Your answer cannot be blank.\n");
+            else
+                return answer;
+        }
+    }
+
+    private static String getDefaultOrCustomFolder(String folderName, String defaultFolder, Scanner scanner)
+    {
+        File folder = new File(defaultFolder);
+        if(!folder.exists())
+        {
+            System.out.println("Couldn't find your " + folderName + " data folder. Enter the directory link below or hit Enter to use the directory CHScrobbler is in.");
+            String answer = scanner.nextLine();
+            return answer.trim().isEmpty() ? defaultFolder : answer.replaceAll("\\\\", "/");
+        }
         else
-            return defaultUserDirectory + "/Clone Hero";
+        {
+            System.out.println("Automatically found your " + folderName + " folder:");
+            System.out.println(folder.getPath());
+            System.out.println("If this isn't correct, you can change it in your config.\n");
+            return defaultFolder;
+        }
+    }
+
+    private static boolean getYesOrNoInput(String prompt, Scanner scanner)
+    {
+        while(true)
+        {
+            System.out.print(prompt + " ");
+            String input = scanner.nextLine().toLowerCase();
+            if(input.equals("y"))
+                return true;
+            else if(input.equals("n"))
+                return false;
+            else
+                System.out.println("Invalid answer. Please enter 'y' for yes or 'n' for no.");
+        }
+    }
+
+    private static void saveConfigToFile(File configFile, Config config) throws
+        IOException
+    {
+        try(FileWriter fw = new FileWriter(configFile))
+        {
+            fw.write(config.toString());
+        }
     }
 }

@@ -4,131 +4,79 @@ import com.google.gson.Gson;
 import de.umass.lastfm.Authenticator;
 import de.umass.lastfm.Caller;
 import de.umass.lastfm.Session;
-import jsonObjects.ReleaseJson;
+import json.ReleaseJson;
 import methods.Setup;
 import methods.Statics;
 import methods.Utils;
+import methods.Validator;
 import objects.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 import java.util.logging.Level;
 
 public class CHScrobbler
 {
-    private static final String VERSION = "v1.5";
+    private static final String VERSION = "v1.6";
+    private static final String REPO_URL = "https://github.com/angelolz/CHScrobbler";
     private static Logger logger;
+    private static Config config;
 
     public static void main(String[] args)
     {
+        //logger for CHScrobbler
         logger = LoggerFactory.getLogger(CHScrobbler.class);
 
-        logger.info("Thanks for using CHScrobbler " + VERSION + " by angelolz1 :)");
-        logger.info("https://github.com/angelolz/CHScrobbler");
+        //logger for last.fm api
+        Caller.getInstance().getLogger().setLevel(Level.WARNING);
+
+        logger.info("Thanks for using CHScrobbler {} by angelolz1 :) | {}", VERSION, REPO_URL);
         checkVersion();
 
+        config = new Config();
+
         //start setup if config.txt isn't found
-        if(!new File("config.txt").exists())
-            initSetup(new File("config.txt"));
+        if(!new File(Statics.CONFIG_FILE).exists())
+        {
+            logger.info("--------- Running setup... ---------");
+            System.out.println();
+            initSetup(new File(Statics.CONFIG_FILE));
+        }
 
         try
         {
-            Config config = new Config();
-
             //get properties
-            File file = new File("config.txt");
+            File file = new File(Statics.CONFIG_FILE);
             FileInputStream propFile = new FileInputStream(file);
             Properties prop = new Properties();
             prop.load(propFile);
 
-            config.setLastFmApiKey(prop.getProperty("lastfm_apikey"))
-                  .setLastFmSecret(prop.getProperty("lastfm_secret"))
-                  .setUsername(prop.getProperty("lastfm_username"))
-                  .setPassword(prop.getProperty("lastfm_password"))
-                  .setDataFolder(prop.getProperty(Statics.DATA_FOLDER_PROP_NAME))
-                  .setScrobbleThreshold(Integer.parseInt(prop.getProperty(Statics.SCROBBLE_THRESHOLD_PROP_NAME)));
-
-            //clone hero data
-            String dataFolder = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/") + "/Clone Hero";
-            if(config.getDataFolder() == null)
-            {
-                FileOutputStream fr = new FileOutputStream(file);
-                config.setDataFolder(dataFolder);
-                prop.setProperty(Statics.DATA_FOLDER_PROP_NAME, dataFolder);
-                prop.store(fr, null);
-            }
-
-            else
-            {
-                config.setDataFolder(prop.getProperty(Statics.DATA_FOLDER_PROP_NAME));
-                logger.info("Data folder: {}", config.getDataFolder());
-            }
-
-            if(config.getScrobbleThreshold() == null)
-            {
-                FileOutputStream fr = new FileOutputStream(file);
-                config.setScrobbleThreshold(Statics.DEFAULT_SCROBBLE_THRESHOLD);
-                prop.setProperty(Statics.SCROBBLE_THRESHOLD_PROP_NAME, String.valueOf(Statics.DEFAULT_SCROBBLE_THRESHOLD));
-                prop.store(fr, null);
-            }
-
-            else
-            {
-                config.setScrobbleThreshold(validateThreshold(prop.getProperty(Statics.SCROBBLE_THRESHOLD_PROP_NAME)));
-                logger.info("Scrobble threshold: {} seconds", config.getScrobbleThreshold());
-            }
-
-            //set last.fm api to show only warnings
-            Caller.getInstance().getLogger().setLevel(Level.WARNING);
-
-            if(Utils.isNullOrEmpty(config.getLastFmApiKey()) || Utils.isNullOrEmpty(config.getLastFmSecret()))
-            {
-                JOptionPane.showMessageDialog(null, "last.fm API Key or shared secret key cannot be blank! Please fill them in with the config.txt file.",
-                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if(Utils.isNullOrEmpty(config.getUsername()) || Utils.isNullOrEmpty(config.getPassword()))
-            {
-                JOptionPane.showMessageDialog(null, "last.fm username or password cannot be blank! Please fill them in with the config.txt file.",
-                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+            Validator.validateSettings(file, config, prop);
+            printSettings();
 
             //logs in last.fm with provided info
             Session session = Authenticator.getMobileSession(config.getUsername(), config.getPassword(), config.getLastFmApiKey(), config.getLastFmSecret());
 
             if(session == null)
-            {
-                JOptionPane.showMessageDialog(null, "Unable to establish connection with last.fm! Please make sure your config.txt details are correct!",
-                    Statics.LAST_FM_INIT_ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-
+                Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Unable to establish connection with last.fm! Please make sure your last.fm details are correct!");
             else
             {
                 logger.info("Successfully logged in with last.fm!");
-                ScrobblerManager.init(session, config.getDataFolder(), config.getScrobbleThreshold());
+                ScrobblerManager.init(session);
             }
         }
 
         catch(Exception e)
         {
-            logger.error("Something went wrong reading the config file! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.");
-            e.printStackTrace();
+            logger.error("Something went wrong reading the config file! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.", e);
         }
     }
 
-    public static Logger getLogger()
-    {
-        return logger;
-    }
+    public static Logger getLogger() { return logger; }
+
+    public static Config getConfig() { return config; }
 
     private static void checkVersion()
     {
@@ -139,47 +87,25 @@ public class CHScrobbler
         boolean latestVersion = VERSION.equalsIgnoreCase(r.getTagName());
 
         if(!latestVersion)
-            logger.warn("You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible.\n");
+            logger.warn("!! You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible. !!");
     }
 
     private static void initSetup(File file)
     {
-        try
-        {
-            Setup.init(file);
-        }
-
+        try { Setup.init(file); }
         catch(IOException e)
         {
-            logger.error("There was an error making the config file. Please report this error to @angelolz1 on Github or Twitter");
-            e.printStackTrace();
+            logger.error("There was an error making the config file. Please report this error to @angelolz1 on Github or Twitter.", e);
         }
     }
 
-    private static int validateThreshold(String thresholdSecondsString)
+    private static void printSettings()
     {
-        int scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
-
-        if(thresholdSecondsString != null && !thresholdSecondsString.isEmpty())
-        {
-            try
-            {
-                scrobbleThresholdSeconds = Integer.parseInt(thresholdSecondsString);
-            }
-            catch(NumberFormatException e)
-            {
-                logger.warn("Invalid scrobble_threshold_seconds given. Please fix this setting in your config.txt file.");
-                logger.info("scrobble_threshold_seconds set to default of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
-            }
-
-            if(scrobbleThresholdSeconds < Statics.DEFAULT_SCROBBLE_THRESHOLD || scrobbleThresholdSeconds > 240)
-            {
-                scrobbleThresholdSeconds = Statics.DEFAULT_SCROBBLE_THRESHOLD;
-                logger.warn("scrobble_threshold_seconds must be a valid number between {} and 240 seconds (4 minutes). Please fix this setting in your config.txt file.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
-                logger.info("scrobble_threshold_seconds set to default of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
-            }
-        }
-
-        return scrobbleThresholdSeconds;
+        logger.info("------- CHScrobbler Settings -------");
+        logger.info("Clone Hero Data folder: {}", config.getCloneHeroDataFolder());
+        logger.info("ScoreSpy Data Folder: {}", config.getScorespyDataFolder());
+        logger.info("ScoreSpy Mode: {}", config.isScoreSpyMode());
+        logger.info("Scrobble threshold: {} seconds", config.getScrobbleThreshold());
+        logger.info("------------------------------------");
     }
 }

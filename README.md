@@ -15,13 +15,13 @@ This app was created by a request of a friend who is a big user of last.fm. I de
 4. You may open the program. Upon opening the program, it will prompt you to provide your last.fm credentials so that it may be able to scrobble under your name.  
 
     ***Note***: If you don't want to do the setup, create a file called `config.txt` in the same directory as the .exe and put these properties in it and fill it in: 
-```
-lastfm_apikey=
-lastfm_secret=
-lastfm_username=
-lastfm_password=
-scrobble_threshold_seconds=30
-```
+    ```
+    lastfm_apikey=
+    lastfm_secret=
+    lastfm_username=
+    lastfm_password=
+    scrobble_threshold_seconds=30
+    ```
 
 You can get your last.fm api details [here](https://www.last.fm/api/account/create).
 
@@ -39,3 +39,18 @@ If you have any improvements that you think would benefit the app a lot, please 
 
 ## License
 This project uses the MIT license.
+
+# FAQ
+### CHScrobbler keeps showing that I'm playing a song every second and nothing scrobbles!
+- This is probably because CHScrobbler is unable to properly read your current playing format. Use these formats:
+  - Scrobbling with album name:
+    `custom_song_export = %s%n%a%n%c%n%b`
+  - Scrobbling **without** album name: `custom_song_export = %s%n%a%n%c`
+
+### The app won't open for me!
+- This is probably because you don't have Java installed yet. If you did install Java, your environment variables
+  might've not been set properly. Follow the steps for
+  Windows in [this site](https://www.geeksforgeeks.org/how-to-set-java-path-in-windows-and-linux/) to set Java in your `PATH` system variable.
+
+### CHScrobbler has the song/artist/album swapped around!
+- You may have changed your `custom_song_export` in your `settings.ini` file and forgot to restart Clone Hero and/or CHScrobbler. 
