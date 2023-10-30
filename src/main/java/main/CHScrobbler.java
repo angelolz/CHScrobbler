@@ -2,6 +2,7 @@ package main;
 
 import com.google.gson.Gson;
 import de.umass.lastfm.Authenticator;
+import de.umass.lastfm.CallException;
 import de.umass.lastfm.Caller;
 import de.umass.lastfm.Session;
 import json.ReleaseJson;
@@ -14,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -51,7 +55,7 @@ public class CHScrobbler
             File file = new File(Statics.CONFIG_FILE);
             FileInputStream propFile = new FileInputStream(file);
             Properties prop = new Properties();
-            prop.load(propFile);
+            prop.load(new InputStreamReader(propFile, StandardCharsets.UTF_8));
 
             Validator.validateSettings(file, config, prop);
             printSettings();
@@ -61,10 +65,20 @@ public class CHScrobbler
 
             if(session == null)
                 Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Unable to establish connection with last.fm! Please make sure your last.fm details are correct!");
+
+            logger.info("Successfully logged in with last.fm!");
+            ScrobblerManager.init(session);
+        }
+
+        catch(CallException e)
+        {
+            if(e.getCause() instanceof UnknownHostException)
+                Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Unable to establish connection with last.fm! Please check your internet connection.");
+
             else
             {
-                logger.info("Successfully logged in with last.fm!");
-                ScrobblerManager.init(session);
+                logger.error("Something went wrong reading the config file! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.", e);
+                Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Something went wrong when establishing a connection with last.fm!\nPlease send a screenshot of this error log to @angelolz1 on GitHub or Twitter before clicking OK.");
             }
         }
 
@@ -81,6 +95,13 @@ public class CHScrobbler
     private static void checkVersion()
     {
         String json = Utils.readURL("https://api.github.com/repos/angelolz/CHScrobbler/releases/latest");
+
+        if(json == null)
+        {
+            CHScrobbler.getLogger().error("Unable to check for new updates! This is probably due to no internet connection or GitHub is down.");
+            return;
+        }
+
         Gson gson = new Gson();
         ReleaseJson r = gson.fromJson(json, ReleaseJson.class);
 

@@ -43,11 +43,8 @@ public class Utils
 
         catch(IOException e)
         {
-            CHScrobbler.getLogger().error("Unable to check for new updates!", e);
+            return null;
         }
-
-        //if it fails
-        return null;
     }
 
     public static boolean isNullOrEmpty(String str)
