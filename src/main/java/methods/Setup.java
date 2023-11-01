@@ -1,58 +1,48 @@
 package methods;
 
-import main.CHScrobbler;
+import com.google.gson.GsonBuilder;
+import objects.Game;
 import objects.Config;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 
 public class Setup
 {
-    public static void init(File configFile) throws IOException
+    public static Config init() throws IOException
     {
+        Config config = new Config();
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Hello! Thank you for using CHScrobbler. This seems like your first time using the program! I'll get you started.\n");
 
-        String apiKey = getUserInput("What is your last.fm api key?", scanner);
-        String secret = getUserInput("What is your last.fm shared secret?", scanner);
-        String user = getUserInput("What is your last.fm username?", scanner);
-        String pass = getUserInput("What is your last.fm password?", scanner);
+        Config.LastFmCredentials lastFmCredentials = new Config.LastFmCredentials();
+        lastFmCredentials.setLastFmApiKey(getUserInput("What is your last.fm api key?", scanner));
+        lastFmCredentials.setLastFmSecret(getUserInput("What is your last.fm shared secret?", scanner));
+        lastFmCredentials.setLastfmUserName(getUserInput("What is your last.fm username?", scanner));
+        lastFmCredentials.setLastFmPassword(getUserInput("What is your last.fm password?", scanner));
 
+        Game gameMode = getGameInput(scanner);
         System.out.println();
 
-        String cloneHeroDataFolder = getDefaultOrCustomFolder("Clone Hero", Utils.getDefaultCloneHeroDataFolder(), scanner);
-        String scoreSpyDataFolder = "";
-        boolean scoreSpyMode = false;
-        if(!Utils.isMac())
-        {
-            scoreSpyDataFolder = getDefaultOrCustomFolder("ScoreSpy", Utils.getDefaultScoreSpyDataFolder(), scanner);
-            scoreSpyMode = getYesOrNoInput("Do you want to use ScoreSpy mode? [y/n]", scanner);
-            System.out.printf("ScoreSpy mode will be %s. This can be changed in your %s file.\n\n",
-                scoreSpyMode ? "ENABLED" : "DISABLED", Statics.CONFIG_FILE);
-        }
-
-        else
-            System.out.println("CHScrobbler detected that you are on a Mac, so ScoreSpy questions will be skipped.\n");
-
+        System.out.println("--------- Finding your data folders... ---------");
+        Config.DataFolders dataFolders = getFolders(scanner);
         scanner.close();
 
-        CHScrobbler.getConfig()
-                   .setLastFmApiKey(apiKey)
-                   .setLastFmSecret(secret)
-                   .setUsername(user)
-                   .setPassword(pass)
-                   .setCloneHeroDataFolder(cloneHeroDataFolder)
-                   .setScorespyDataFolder(scoreSpyDataFolder)
-                   .setScrobbleThreshold(Statics.DEFAULT_SCROBBLE_THRESHOLD)
-                   .setScoreSpyMode(scoreSpyMode);
+        config.setLastFmCredentials(lastFmCredentials)
+              .setDataFolders(dataFolders)
+              .setGameMode(gameMode)
+              .setScrobbleThreshold(String.valueOf(Statics.DEFAULT_SCROBBLE_THRESHOLD));
 
-        saveConfigToFile(configFile, CHScrobbler.getConfig());
+        FileWriter fw = new FileWriter(Statics.CONFIG_FILE);
+        new GsonBuilder().setPrettyPrinting().create().toJson(config, fw);
+        fw.close();
 
         System.out.printf("Excellent! All your details are saved in the \"%s\" file, so you can change that if you've made a mistake.\n" +
             "The program will now proceed with logging in.\n\n", Statics.CONFIG_FILE);
+
+        return config;
     }
 
     private static String getUserInput(String prompt, Scanner scanner)
@@ -69,45 +59,73 @@ public class Setup
         }
     }
 
-    private static String getDefaultOrCustomFolder(String folderName, String defaultFolder, Scanner scanner)
+    private static Config.DataFolders getFolders(Scanner scanner)
     {
-        File folder = new File(defaultFolder);
-        if(!folder.exists())
+        Config.DataFolders dataFolders = new Config.DataFolders();
+
+        for(Game game : Game.values())
         {
-            System.out.println("Couldn't find your " + folderName + " data folder. Enter the directory link below or hit Enter to use the directory CHScrobbler is in.");
-            String answer = scanner.nextLine();
-            return answer.trim().isEmpty() ? defaultFolder : answer.replaceAll("\\\\", "/");
+            String defaultFolderPath = getDefaultFolderPath(game);
+
+            if(game == Game.SCORESPY && Utils.isMac())
+            {
+                System.out.println("CHScrobbler detected that you are on a Mac. Scorespy data folder setting will be empty.");
+                dataFolders.setScorespyDataFolder("");
+                continue;
+            }
+
+            if(!defaultFolderPath.isEmpty()) {
+                Utils.setFolderPath(dataFolders, game, defaultFolderPath);
+                System.out.printf("Automatically found your %s folder: %s%n", game.getGameName(), defaultFolderPath);
+            }
+            else
+            {
+                System.out.printf("Couldn't find your %s data folder. Enter the directory below or hit Enter to use the directory CHScrobbler is in.%n", game.getGameName());
+                String answer = scanner.nextLine();
+                answer = answer.trim().isEmpty() ? "" : answer.replaceAll("\\\\", "/");
+                Utils.setFolderPath(dataFolders, game, answer);
+            }
         }
-        else
-        {
-            System.out.println("Automatically found your " + folderName + " folder:");
-            System.out.println(folder.getPath());
-            System.out.println("If this isn't correct, you can change it in your config.\n");
-            return defaultFolder;
-        }
+
+        System.out.println("If any of these folders aren't correct, you can change it in your config.\n");
+        return dataFolders;
     }
 
-    private static boolean getYesOrNoInput(String prompt, Scanner scanner)
+    private static Game getGameInput(Scanner scanner)
     {
         while(true)
         {
-            System.out.print(prompt + " ");
-            String input = scanner.nextLine().toLowerCase();
-            if(input.equals("y"))
-                return true;
-            else if(input.equals("n"))
-                return false;
-            else
-                System.out.println("Invalid answer. Please enter 'y' for yes or 'n' for no.");
+            System.out.print("What game do you want to use with CHScrobbler? [1 = Clone Hero | 2 = ScoreSpy | 3 = YARG] ");
+            String input = scanner.nextLine();
+            switch(input)
+            {
+                case "1":
+                    System.out.println("You've chosen Clone Hero.");
+                    return Game.CLONE_HERO;
+                case "2":
+                    System.out.println("You've chosen ScoreSpy.");
+                    return Game.SCORESPY;
+                case "3":
+                    System.out.println("You've chosen YARG.");
+                    return Game.YARG;
+                default:
+                    System.out.println("Invalid answer. Please enter 1, 2, or 3.");
+            }
         }
     }
 
-    private static void saveConfigToFile(File configFile, Config config) throws
-        IOException
+    private static String getDefaultFolderPath(Game game)
     {
-        try(FileWriter fw = new FileWriter(configFile))
+        switch(game)
         {
-            fw.write(config.toString());
+            case CLONE_HERO:
+                return Utils.getDefaultCloneHeroDataFolder();
+            case SCORESPY:
+                return Utils.getDefaultScoreSpyDataFolder();
+            case YARG:
+                return Utils.getDefaultYARGFolder();
+            default:
+                return "";
         }
     }
 }

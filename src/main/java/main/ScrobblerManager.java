@@ -1,18 +1,19 @@
 package main;
 
+import com.google.gson.Gson;
 import de.umass.lastfm.Session;
 import de.umass.lastfm.Track;
 import de.umass.lastfm.scrobble.ScrobbleData;
 import de.umass.lastfm.scrobble.ScrobbleResult;
 import methods.Statics;
 import methods.Utils;
+import objects.Game;
 import objects.Song;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,9 @@ public class ScrobblerManager
 
     private static void initCustomSongPattern()
     {
+        if(CHScrobbler.getConfig().getGameMode() == Game.YARG)
+            return; //YARG doesn't have the same format as CH or ScoreSpy
+
         Optional<String> customSongExportSetting = getCustomSongExportSetting();
         boolean containsTrackAndArtist = customSongExportSetting.map(x -> x.contains("%s") && x.contains("%a")).orElse(true);
         boolean containsAlbum = customSongExportSetting.map(x -> x.contains("%b")).orElse(false);
@@ -84,9 +88,9 @@ public class ScrobblerManager
 
     private static Optional<String> getCustomSongExportSetting()
     {
-        Path settingsFilePath = getGamePath();
+        Path settingsFilePath = Utils.getFilePath(CHScrobbler.getConfig().getGameMode(), CHScrobbler.getConfig().getDataFolders(), Statics.GAME_SETTINGS_FILE);
 
-        if(!Files.exists(settingsFilePath))
+        if(CHScrobbler.getConfig().getGameMode() == Game.YARG || !Files.exists(settingsFilePath)) //YARG doesn't have a custom song setting
             return Optional.empty();
 
         try(Stream<String> lines = Files.lines(settingsFilePath, StandardCharsets.UTF_8))
@@ -129,6 +133,7 @@ public class ScrobblerManager
                 logNowPlaying(songData);
                 attemptedScrobble = false;
             }
+
             else if(!attemptedScrobble && shouldAttemptScrobble())
             {
                 attemptedScrobble = true;
@@ -156,7 +161,7 @@ public class ScrobblerManager
 
     private static boolean shouldAttemptScrobble()
     {
-        return !attemptedScrobble && (System.currentTimeMillis() / 1000) - scrobbleData.getTimestamp() >= CHScrobbler.getConfig().getScrobbleThreshold();
+        return !attemptedScrobble && (System.currentTimeMillis() / 1000) - scrobbleData.getTimestamp() >= Long.parseLong(CHScrobbler.getConfig().getScrobbleThreshold());
     }
 
     private static void updateScrobbleData(Song songData)
@@ -172,7 +177,7 @@ public class ScrobblerManager
 
     private static void logNowPlaying(Song songData)
     {
-        CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}", songData.getTrack(), songData.getArtist(), songData.getAlbum().isEmpty() ? "" : ", from the album \"" + songData.getAlbum() + "\".");
+        CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}", songData.getTrack(), songData.getArtist(), songData.getAlbum() == null || songData.getAlbum().isEmpty() ? "" : ", from the album \"" + songData.getAlbum() + "\".");
     }
 
     private static boolean getScrobbleResult(ScrobbleResult result)
@@ -185,14 +190,17 @@ public class ScrobblerManager
         if(!loggedException)
         {
             loggedException = true;
-            CHScrobbler.getLogger().error("Something went wrong! Please send a screenshot of this error log to @angelolz1 on GitHub or Twitter.", e);
+            CHScrobbler.getLogger().error("Something went wrong! " + Statics.REPORT_MESSAGE, e);
         }
     }
 
-
     private static String getCurrentSong()
     {
-        Path currentSongFilePath = getGamePath();
+        Path currentSongFilePath;
+        if(CHScrobbler.getConfig().getGameMode() == Game.YARG)
+            currentSongFilePath = Utils.getFilePath(CHScrobbler.getConfig().getGameMode(), CHScrobbler.getConfig().getDataFolders(), Statics.CURRENT_SONG_JSON);
+        else
+            currentSongFilePath = Utils.getFilePath(CHScrobbler.getConfig().getGameMode(), CHScrobbler.getConfig().getDataFolders(), Statics.CURRENT_SONG_TXT);
 
         try
         {
@@ -213,7 +221,6 @@ public class ScrobblerManager
                 warnedNotFound = false;
                 return new String(Files.readAllBytes(currentSongFilePath), StandardCharsets.UTF_8);
             }
-
         }
 
         catch(IOException e)
@@ -225,6 +232,10 @@ public class ScrobblerManager
 
     private static Song getSongData(String currentSong)
     {
+        if(CHScrobbler.getConfig().getGameMode() == Game.YARG)
+            return new Gson().fromJson(currentSong, Song.class);
+
+        //else clone hero and score spy processing
         String artist;
         String track;
         String album;
@@ -266,13 +277,5 @@ public class ScrobblerManager
         attemptedScrobble = false;
 
         CHScrobbler.getLogger().info("Currently not playing anything!");
-    }
-
-    private static Path getGamePath()
-    {
-        if(!CHScrobbler.getConfig().isScoreSpyMode())
-            return Paths.get(CHScrobbler.getConfig().getCloneHeroDataFolder(), Statics.GAME_SETTINGS_FILE);
-        else
-            return Paths.get(CHScrobbler.getConfig().getScorespyDataFolder(), Statics.GAME_SETTINGS_FILE);
     }
 }

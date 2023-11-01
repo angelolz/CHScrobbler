@@ -1,6 +1,7 @@
 package methods;
 
-import main.CHScrobbler;
+import objects.Config;
+import objects.Game;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -9,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 public class Utils
@@ -79,12 +82,6 @@ public class Utils
             return defaultUserDirectory + "/Clone Hero";
     }
 
-    public static void showErrorAndExit(String title, String message)
-    {
-        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
-        System.exit(1);
-    }
-
     public static String getDefaultScoreSpyDataFolder()
     {
         String os = System.getProperty(Statics.OS_NAME);
@@ -95,16 +92,85 @@ public class Utils
             return defaultUserDirectory + "/ScoreSpy/100";
         }
 
+        else if(os.toLowerCase().contains("os x")) //scorespy isn't supported for macs
+        {
+            return "";
+        }
 
-        String defaultInstallDir = System.getenv("ProgramFiles") + "/ScoreSpy Launcher/GameData/100";
-        defaultInstallDir = defaultInstallDir.replaceAll("\\\\", "/");
+        else
+        {
+            String defaultInstallDir = System.getenv("ProgramFiles") + "/ScoreSpy Launcher/GameData/100";
+            return defaultInstallDir.replaceAll("\\\\", "/");
+        }
+    }
 
-        return defaultInstallDir;
+    public static String getDefaultYARGFolder()
+    {
+        String os = System.getProperty(Statics.OS_NAME);
+
+        if(os.toLowerCase().contains("linux"))
+        {
+            String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
+            return defaultUserDirectory + "/.config/unity3d/YARC/YARG/";
+        }
+
+        else if(os.toLowerCase().contains("os x")) //TODO
+        {
+            return "";
+        }
+
+        else
+        {
+            String defaultInstallDir = System.getProperty("user.home") + "/AppData/LocalLow/YARC/YARG";
+            return defaultInstallDir.replaceAll("\\\\", "/");
+        }
     }
 
     public static boolean isMac()
     {
         String os = System.getProperty(Statics.OS_NAME);
         return os.toLowerCase().contains("mac os x");
+    }
+
+    public static void showErrorAndExit(String title, String message)
+    {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+        System.exit(1);
+    }
+
+    public static void setFolderPath(Config.DataFolders dataFolders, Game game, String folderPath)
+    {
+        switch(game)
+        {
+            case CLONE_HERO:
+                dataFolders.setCloneHeroDataFolder(folderPath);
+                break;
+            case SCORESPY:
+                dataFolders.setScorespyDataFolder(folderPath);
+                break;
+            case YARG:
+                dataFolders.setYARGDataFolder(folderPath);
+                break;
+        }
+    }
+
+    public static String getFolderPath(Game gameMode, Config.DataFolders dataFolders)
+    {
+        switch(gameMode)
+        {
+            case CLONE_HERO:
+                return dataFolders.getCloneHeroDataFolder();
+            case SCORESPY:
+                return dataFolders.getScorespyDataFolder();
+            case YARG:
+                return dataFolders.getYARGDataFolder();
+            default:
+                return null;
+        }
+    }
+
+    public static Path getFilePath(Game gameMode, Config.DataFolders dataFolders, String fileName)
+    {
+        return Paths.get(getFolderPath(gameMode, dataFolders), fileName);
     }
 }
