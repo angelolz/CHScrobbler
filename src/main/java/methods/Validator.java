@@ -1,12 +1,10 @@
 package methods;
 
-import com.google.gson.GsonBuilder;
 import objects.Config;
 import objects.Game;
 import main.CHScrobbler;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
 public class Validator
@@ -27,19 +25,28 @@ public class Validator
         validateDataFolder();
         validateScrobbleThreshold();
 
-        if(updated)
-            new GsonBuilder().setPrettyPrinting().create().toJson(config, new FileWriter(Statics.CONFIG_FILE));
+        if(updated) Utils.writeSettings(config);
 
         return config;
     }
 
-    private void validateLastFmCredentials()
+    private void validateLastFmCredentials() throws IOException
     {
         Config.LastFmCredentials lastFmCredentials = config.getLastFmCredentials();
         String fillInText = String.format("Please fill them in the %s file.", Statics.CONFIG_FILE);
 
         if(lastFmCredentials == null)
-            Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Couldn't find last.fm credentials! " + fillInText);
+        {
+            lastFmCredentials = new Config.LastFmCredentials();
+            lastFmCredentials.setLastFmApiKey("");
+            lastFmCredentials.setLastFmSecret("");
+            lastFmCredentials.setLastfmUserName("");
+            lastFmCredentials.setLastFmPassword("");
+            config.setLastFmCredentials(lastFmCredentials);
+            Utils.writeSettings(config);
+
+//            Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Couldn't find last.fm credentials! " + fillInText);
+        }
 
         String apiKey = lastFmCredentials.getLastFmApiKey();
         String secret = lastFmCredentials.getLastFmSecret();
@@ -62,13 +69,16 @@ public class Validator
         {
             config.setGameMode(Game.CLONE_HERO);
             updated = true;
-            CHScrobbler.getLogger().info("Game mode setting is not set or incorrect, defaulting to Clone Hero.");
+            CHScrobbler.getLogger().warn("Game mode setting is not set or is incorrect, defaulting to Clone Hero.");
         }
     }
 
     private void validateDataFolder()
     {
-        Config.DataFolders dataFolders = config.getDataFolders();
+        Config.DataFolders dataFolders = new Config.DataFolders();
+        if(config.getDataFolders() != null)
+            dataFolders = config.getDataFolders();
+
         for(Game game : Game.values())
         {
             String defaultFolder = null;
@@ -81,7 +91,7 @@ public class Validator
                     break;
                 case SCORESPY:
                     defaultFolder = Utils.getDefaultScoreSpyDataFolder();
-                    setFolder = dataFolders.getScorespyDataFolder();
+                    setFolder = dataFolders.getScoreSpyDataFolder();
                     break;
                 case YARG:
                     defaultFolder = Utils.getDefaultYARGFolder();
@@ -99,7 +109,7 @@ public class Validator
                             dataFolders.setCloneHeroDataFolder("");
                             break;
                         case SCORESPY:
-                            dataFolders.setScorespyDataFolder("");
+                            dataFolders.setScoreSpyDataFolder("");
                             break;
                         case YARG:
                             dataFolders.setYARGDataFolder("");
@@ -107,17 +117,19 @@ public class Validator
                     }
 
                     updated = true;
-                    CHScrobbler.getLogger().info("Couldn't find data folder setting or default data folder for {}, setting to empty.", game.getGameName());
+                    CHScrobbler.getLogger().warn("Couldn't find data folder setting or default data folder for {}, setting to empty.", game.getGameName());
                 }
 
                 else
                 {
                     Utils.setFolderPath(dataFolders, game, defaultFolder);
                     updated = true;
-                    CHScrobbler.getLogger().info("Couldn't find data folder setting for {}, using default data folder: {}", game.getGameName(), defaultFolder);
+                    CHScrobbler.getLogger().warn("Couldn't find data folder setting for {}, using default data folder: {}", game.getGameName(), defaultFolder);
                 }
             }
         }
+
+        if(updated) config.setDataFolders(dataFolders);
     }
 
     private void validateScrobbleThreshold()
@@ -126,14 +138,14 @@ public class Validator
         {
             config.setScrobbleThreshold(String.valueOf(Statics.DEFAULT_SCROBBLE_THRESHOLD));
             updated = true;
-            CHScrobbler.getLogger().info("Couldn't find scrobble threshold setting, using default threshold of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
+            CHScrobbler.getLogger().warn("Couldn't find scrobble threshold setting, using default threshold of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
         }
 
         if(!Utils.isNumber(config.getScrobbleThreshold()))
         {
             config.setScrobbleThreshold(String.valueOf(Statics.DEFAULT_SCROBBLE_THRESHOLD));
             updated = true;
-            CHScrobbler.getLogger().info("Scrobble threshold setting is not a valid number, using default threshold of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
+            CHScrobbler.getLogger().warn("Scrobble threshold setting is not a valid number, using default threshold of {} seconds.", Statics.DEFAULT_SCROBBLE_THRESHOLD);
         }
 
         else

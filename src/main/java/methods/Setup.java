@@ -1,10 +1,8 @@
 package methods;
 
-import com.google.gson.GsonBuilder;
 import objects.Game;
 import objects.Config;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -35,9 +33,7 @@ public class Setup
               .setGameMode(gameMode)
               .setScrobbleThreshold(String.valueOf(Statics.DEFAULT_SCROBBLE_THRESHOLD));
 
-        FileWriter fw = new FileWriter(Statics.CONFIG_FILE);
-        new GsonBuilder().setPrettyPrinting().create().toJson(config, fw);
-        fw.close();
+        Utils.writeSettings(config);
 
         System.out.printf("Excellent! All your details are saved in the \"%s\" file, so you can change that if you've made a mistake.\n" +
             "The program will now proceed with logging in.\n\n", Statics.CONFIG_FILE);
@@ -70,7 +66,7 @@ public class Setup
             if(game == Game.SCORESPY && Utils.isMac())
             {
                 System.out.println("CHScrobbler detected that you are on a Mac. Scorespy data folder setting will be empty.");
-                dataFolders.setScorespyDataFolder("");
+                dataFolders.setScoreSpyDataFolder("");
                 continue;
             }
 

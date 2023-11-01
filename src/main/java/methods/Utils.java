@@ -1,11 +1,13 @@
 package methods;
 
+import com.google.gson.GsonBuilder;
 import objects.Config;
 import objects.Game;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -73,10 +75,9 @@ public class Utils
 
     public static String getDefaultCloneHeroDataFolder()
     {
-        String os = System.getProperty(Statics.OS_NAME);
         String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
 
-        if(os.toLowerCase().contains("linux"))
+        if(isLinux())
             return defaultUserDirectory + "/.clonehero";
         else
             return defaultUserDirectory + "/Clone Hero";
@@ -84,52 +85,34 @@ public class Utils
 
     public static String getDefaultScoreSpyDataFolder()
     {
-        String os = System.getProperty(Statics.OS_NAME);
-
-        if(os.toLowerCase().contains("linux"))
-        {
-            String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
-            return defaultUserDirectory + "/ScoreSpy/100";
-        }
-
-        else if(os.toLowerCase().contains("os x")) //scorespy isn't supported for macs
-        {
+        if(isLinux())
+            return FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/") + "/ScoreSpy/100";
+        else if(isMac()) //scorespy isn't supported for macs
             return "";
-        }
-
         else
-        {
-            String defaultInstallDir = System.getenv("ProgramFiles") + "/ScoreSpy Launcher/GameData/100";
-            return defaultInstallDir.replaceAll("\\\\", "/");
-        }
+            return System.getenv("ProgramFiles").replaceAll("\\\\", "/") + "/ScoreSpy Launcher/GameData/100";
     }
 
     public static String getDefaultYARGFolder()
     {
-        String os = System.getProperty(Statics.OS_NAME);
-
-        if(os.toLowerCase().contains("linux"))
-        {
-            String defaultUserDirectory = FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/");
-            return defaultUserDirectory + "/.config/unity3d/YARC/YARG/";
-        }
-
-        else if(os.toLowerCase().contains("os x")) //TODO
-        {
-            return "";
-        }
-
+        if(isLinux())
+            return FileSystemView.getFileSystemView().getDefaultDirectory().getPath().replaceAll("\\\\", "/") + "/.config/unity3d/YARC/YARG/";
+        else if(isMac())
+            return System.getProperty("user.home").replaceAll("\\\\", "/") + "/Library/Application Support/com.UnityTechnologies.com.unity.template-starter-kit";
         else
-        {
-            String defaultInstallDir = System.getProperty("user.home") + "/AppData/LocalLow/YARC/YARG";
-            return defaultInstallDir.replaceAll("\\\\", "/");
-        }
+            return System.getProperty("user.home").replaceAll("\\\\", "/") + "/AppData/LocalLow/YARC/YARG";
     }
 
     public static boolean isMac()
     {
         String os = System.getProperty(Statics.OS_NAME);
         return os.toLowerCase().contains("mac os x");
+    }
+
+    public static boolean isLinux()
+    {
+        String os = System.getProperty(Statics.OS_NAME);
+        return os.toLowerCase().contains("linux");
     }
 
     public static void showErrorAndExit(String title, String message)
@@ -146,7 +129,7 @@ public class Utils
                 dataFolders.setCloneHeroDataFolder(folderPath);
                 break;
             case SCORESPY:
-                dataFolders.setScorespyDataFolder(folderPath);
+                dataFolders.setScoreSpyDataFolder(folderPath);
                 break;
             case YARG:
                 dataFolders.setYARGDataFolder(folderPath);
@@ -161,7 +144,7 @@ public class Utils
             case CLONE_HERO:
                 return dataFolders.getCloneHeroDataFolder();
             case SCORESPY:
-                return dataFolders.getScorespyDataFolder();
+                return dataFolders.getScoreSpyDataFolder();
             case YARG:
                 return dataFolders.getYARGDataFolder();
             default:
@@ -172,5 +155,12 @@ public class Utils
     public static Path getFilePath(Game gameMode, Config.DataFolders dataFolders, String fileName)
     {
         return Paths.get(getFolderPath(gameMode, dataFolders), fileName);
+    }
+
+    public static void writeSettings(Config config) throws IOException
+    {
+        FileWriter fw = new FileWriter(Statics.CONFIG_FILE);
+        new GsonBuilder().setPrettyPrinting().create().toJson(config, fw);
+        fw.close();
     }
 }

@@ -127,7 +127,7 @@ public class CHScrobbler
     {
         logger.info("------- CHScrobbler Settings -------");
         logger.info("last.fm user: {}", config.getLastFmCredentials().getLastfmUserName());
-        logger.info("Game Mode: {}", config.getGameMode());
+        logger.info("Game Mode: {}", config.getGameMode().getGameName());
 
         String folderPath = Utils.getFolderPath(config.getGameMode(), config.getDataFolders());
         logger.info("Data Folder: {}", folderPath.isEmpty() ? "[same as CHScrobbler]" : folderPath);

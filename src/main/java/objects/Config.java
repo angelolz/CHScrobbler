@@ -25,7 +25,7 @@ public class Config
     public static class DataFolders
     {
         private String cloneHeroDataFolder;
-        private String scorespyDataFolder;
+        private String scoreSpyDataFolder;
         private String YARGDataFolder;
     }
 }
