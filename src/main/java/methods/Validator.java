@@ -45,7 +45,7 @@ public class Validator
             config.setLastFmCredentials(lastFmCredentials);
             Utils.writeSettings(config);
 
-//            Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Couldn't find last.fm credentials! " + fillInText);
+            Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "Couldn't find last.fm credentials! " + fillInText);
         }
 
         String apiKey = lastFmCredentials.getLastFmApiKey();
@@ -103,19 +103,7 @@ public class Validator
             {
                 if(!new File(defaultFolder).exists())
                 {
-                    switch(game)
-                    {
-                        case CLONE_HERO:
-                            dataFolders.setCloneHeroDataFolder("");
-                            break;
-                        case SCORESPY:
-                            dataFolders.setScoreSpyDataFolder("");
-                            break;
-                        case YARG:
-                            dataFolders.setYARGDataFolder("");
-                            break;
-                    }
-
+                    Utils.setFolderPath(dataFolders, game, "");
                     updated = true;
                     CHScrobbler.getLogger().warn("Couldn't find data folder setting or default data folder for {}, setting to empty.", game.getGameName());
                 }

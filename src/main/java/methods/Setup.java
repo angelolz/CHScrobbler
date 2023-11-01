@@ -1,8 +1,10 @@
 package methods;
 
+import main.CHScrobbler;
 import objects.Game;
 import objects.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -13,6 +15,8 @@ public class Setup
         Config config = new Config();
         Scanner scanner = new Scanner(System.in);
 
+        CHScrobbler.getLogger().info("--------- Running setup... ---------");
+        System.out.println();
         System.out.println("Hello! Thank you for using CHScrobbler. This seems like your first time using the program! I'll get you started.\n");
 
         Config.LastFmCredentials lastFmCredentials = new Config.LastFmCredentials();
@@ -65,18 +69,20 @@ public class Setup
 
             if(game == Game.SCORESPY && Utils.isMac())
             {
-                System.out.println("CHScrobbler detected that you are on a Mac. Scorespy data folder setting will be empty.");
+                System.out.println("ScoreSpy data folder setting will be empty due to being unsupported on Mac devices.");
                 dataFolders.setScoreSpyDataFolder("");
                 continue;
             }
 
-            if(!defaultFolderPath.isEmpty()) {
+            if(new File(defaultFolderPath).exists())
+            {
                 Utils.setFolderPath(dataFolders, game, defaultFolderPath);
                 System.out.printf("Automatically found your %s folder: %s%n", game.getGameName(), defaultFolderPath);
             }
+
             else
             {
-                System.out.printf("Couldn't find your %s data folder. Enter the directory below or hit Enter to use the directory CHScrobbler is in.%n", game.getGameName());
+                System.out.printf("Couldn't find your %s data folder. Put the directory below or hit [Enter] to use the directory CHScrobbler is in.%n", game.getGameName());
                 String answer = scanner.nextLine();
                 answer = answer.trim().isEmpty() ? "" : answer.replaceAll("\\\\", "/");
                 Utils.setFolderPath(dataFolders, game, answer);

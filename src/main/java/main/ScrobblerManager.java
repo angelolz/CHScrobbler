@@ -209,8 +209,19 @@ public class ScrobblerManager
                 if(!warnedNotFound)
                 {
                     warnedNotFound = true;
-                    CHScrobbler.getLogger().warn("Unable to find \"currentsong.txt\"! Please make sure you have \"Export Current Song\" " +
-                        "enabled in Settings and your Clone Hero data folder is set correctly.");
+
+                    if(CHScrobbler.getConfig().getGameMode() == Game.YARG)
+                    {
+                        CHScrobbler.getLogger().warn("Unable to find \"{}\"! Please make sure your {} data folder is set correctly.",
+                            Statics.CURRENT_SONG_JSON, CHScrobbler.getConfig().getGameMode().getGameName());
+                    }
+
+                    else
+                    {
+                        CHScrobbler.getLogger().warn("Unable to find \"{}\"! Please make sure you have \"Export Current Song\" " +
+                                "enabled in Settings and your {} data folder is set correctly.", Statics.CURRENT_SONG_TXT,
+                            CHScrobbler.getConfig().getGameMode().getGameName());
+                    }
                 }
 
                 return null;

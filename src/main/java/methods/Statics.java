@@ -15,7 +15,7 @@ public class Statics
     public static final String CONFIG_FILE = "config.json";
     public static final String GAME_SETTINGS_FILE = "settings.ini";
     public static final String CURRENT_SONG_TXT = "currentsong.txt";
-    public static final String CURRENT_SONG_JSON = "currentsong.json";
+    public static final String CURRENT_SONG_JSON = "currentSong.json";
 
     public static final String OS_NAME = "os.name";
 

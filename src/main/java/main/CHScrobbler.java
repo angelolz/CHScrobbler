@@ -45,14 +45,19 @@ public class CHScrobbler
         try
         {
             File configFile = new File(Statics.CONFIG_FILE);
-            config = new Gson().fromJson(new FileReader(configFile), Config.class);
 
-            //start setup if config.txt isn't found or config is empty
-            if(!new File(Statics.CONFIG_FILE).exists() || config == null)
-            {
-                logger.info("--------- Running setup... ---------");
-                System.out.println();
+            //start setup if config.json isn't found
+            if(!configFile.exists())
                 config = initSetup();
+            else
+            {
+                FileReader fr = new FileReader(configFile);
+                config = new Gson().fromJson(fr, Config.class);
+                fr.close();
+
+                //start setup if config.json is empty
+                if(config == null)
+                    config = initSetup();
             }
 
             Validator validator = new Validator(config);
@@ -114,7 +119,10 @@ public class CHScrobbler
 
     private static Config initSetup()
     {
-        try { return Setup.init(); }
+        try
+        {
+            return Setup.init();
+        }
         catch(IOException e)
         {
             logger.error("There was an error making the config file. " + Statics.REPORT_MESSAGE, e);
