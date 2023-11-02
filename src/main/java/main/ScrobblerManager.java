@@ -177,7 +177,7 @@ public class ScrobblerManager
 
     private static void logNowPlaying(Song songData)
     {
-        CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}", songData.getTrack(), songData.getArtist(), songData.getAlbum() == null || songData.getAlbum().isEmpty() ? "" : ", from the album \"" + songData.getAlbum() + "\".");
+        CHScrobbler.getLogger().info("Now playing \"{}\" by {}{}.", songData.getTrack(), songData.getArtist(), songData.getAlbum() == null || songData.getAlbum().isEmpty() ? "" : ", from the album \"" + songData.getAlbum() + "\"");
     }
 
     private static boolean getScrobbleResult(ScrobbleResult result)

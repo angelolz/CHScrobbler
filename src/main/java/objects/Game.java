@@ -7,20 +7,18 @@ import lombok.Getter;
 public enum Game
 {
     @SerializedName("clonehero")
-    CLONE_HERO("Clone Hero", "clonehero"),
+    CLONE_HERO("Clone Hero"),
 
     @SerializedName("scorespy")
-    SCORESPY("ScoreSpy","scorespy"),
+    SCORESPY("ScoreSpy"),
 
     @SerializedName("yarg")
-    YARG("YARG","yarg");
+    YARG("YARG");
 
     private final String gameName;
-    private final String settingName;
 
-    Game(String gameName, String settingName)
+    Game(String gameName)
     {
         this.gameName = gameName;
-        this.settingName = settingName;
     }
 }

@@ -113,8 +113,12 @@ public class CHScrobbler
 
         boolean latestVersion = VERSION.equalsIgnoreCase(r.getTagName());
 
-        if(!latestVersion)
-            logger.warn("!! You're currently on an old version of CHScrobbler. Please update CHScrobbler using the link above as soon as possible. !!");
+        if(!latestVersion) {
+            logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            logger.warn("!! A new CHScrobbler version is available. !!");
+            logger.warn("!! Please update using the link above.     !!");
+            logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
     }
 
     private static Config initSetup()

@@ -54,13 +54,34 @@ public class Validator
         String password = lastFmCredentials.getLastFmPassword();
 
         if(Utils.isNullOrEmpty(apiKey))
+        {
+            lastFmCredentials.setLastFmApiKey("");
+            updated = true;
             Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "last.fm API Key cannot be blank! " + fillInText);
-        if(Utils.isNullOrEmpty(secret))
+        }
+
+        else if(Utils.isNullOrEmpty(secret))
+        {
+            lastFmCredentials.setLastFmSecret("");
+            updated = true;
             Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "last.fm shared secret key cannot be blank! " + fillInText);
-        if(Utils.isNullOrEmpty(username))
+        }
+
+        else if(Utils.isNullOrEmpty(username))
+        {
+            lastFmCredentials.setLastfmUserName("");
+            updated = true;
             Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "last.fm username cannot be blank! " + fillInText);
-        if(Utils.isNullOrEmpty(password))
+        }
+
+        else if(Utils.isNullOrEmpty(password))
+        {
+            lastFmCredentials.setLastFmPassword("");
+            updated = true;
             Utils.showErrorAndExit(Statics.LAST_FM_INIT_ERROR, "last.fm password cannot be blank! " + fillInText);
+        }
+
+        if(updated) config.setLastFmCredentials(lastFmCredentials);
     }
 
     private void validateMode()
@@ -70,6 +91,13 @@ public class Validator
             config.setGameMode(Game.CLONE_HERO);
             updated = true;
             CHScrobbler.getLogger().warn("Game mode setting is not set or is incorrect, defaulting to Clone Hero.");
+        }
+
+        else if(Utils.isMac() && config.getGameMode() == Game.SCORESPY)
+        {
+            config.setGameMode(Game.CLONE_HERO);
+            updated = true;
+            CHScrobbler.getLogger().warn("ScoreSpy isn't supported on Mac devices, defaulting to Clone Hero.");
         }
     }
 
@@ -105,7 +133,11 @@ public class Validator
                 {
                     Utils.setFolderPath(dataFolders, game, "");
                     updated = true;
-                    CHScrobbler.getLogger().warn("Couldn't find data folder setting or default data folder for {}, setting to empty.", game.getGameName());
+
+                    if(Utils.isMac() && game == Game.SCORESPY)
+                        CHScrobbler.getLogger().warn("ScoreSpy isn't supported on Mac devices, setting data folder to empty.");
+                    else
+                        CHScrobbler.getLogger().warn("Couldn't find data folder setting or default data folder for {}, setting to empty.", game.getGameName());
                 }
 
                 else
