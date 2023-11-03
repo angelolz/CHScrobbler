@@ -1,5 +1,6 @@
 package objects;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,6 +12,13 @@ public class Config
     private DataFolders dataFolders;
     private String scrobbleThreshold;
     private Game gameMode;
+    @SerializedName("__comment")
+    private String comment;
+
+    public Config()
+    {
+        this.comment = "The gamemode options are clonehero, scorespy, or yarg. Must be lowercase.";
+    }
 
     @Data
     public static class LastFmCredentials

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
@@ -159,7 +160,7 @@ public class Utils
 
     public static void writeSettings(Config config) throws IOException
     {
-        FileWriter fw = new FileWriter(Statics.CONFIG_FILE);
+        FileWriter fw = new FileWriter(Statics.CONFIG_FILE, StandardCharsets.UTF_8);
         new GsonBuilder().setPrettyPrinting().create().toJson(config, fw);
         fw.close();
     }

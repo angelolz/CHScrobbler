@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 public class CHScrobbler
@@ -51,7 +52,7 @@ public class CHScrobbler
                 config = initSetup();
             else
             {
-                FileReader fr = new FileReader(configFile);
+                FileReader fr = new FileReader(configFile, StandardCharsets.UTF_8);
                 config = new Gson().fromJson(fr, Config.class);
                 fr.close();
 
