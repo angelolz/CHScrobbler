@@ -4,6 +4,8 @@ This app was created by a request of a friend who is a big user of last.fm. I de
 
 ## Installation/Usage
 
+⚠️ **You need at least Java 11 to run this program!** If you don't have Java 11 installed, you can install the latest Java versions [here](https://www.oracle.com/java/technologies/downloads/). Either 17 or 21 will work.  
+
 **Note: If you are using YARG, skip to step 2.**
 
 0. Before starting the app, please make sure that **"Export Current Song"** is enabled in your Clone Hero/ScoreSpy Settings.
